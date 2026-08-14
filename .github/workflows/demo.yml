@@ -12,9 +12,9 @@ on:
         required: true
         default: 'https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv'
       spreadsheet_id:
-        description: 'Google Spreadsheet ID'
+        description: 'sheet id'
         required: true
-        default: 'YAHAN_APNI_SHEET_ID_DAALEIN' # <-- Ise apni actual Sheet ID se replace karein
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' # <-- Ise apni actual Sheet ID se replace karein
       worksheet_name:
         description: 'Worksheet Tab Name (e.g., Sheet1)'
         required: true
