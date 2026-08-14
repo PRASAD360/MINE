@@ -14,9 +14,9 @@ on:
       spreadsheet_id:
         description: 'SHEET ID NAME HERE'
         required: true
-        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' # <-- Ise apni actual Sheet ID se replace karein
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
       worksheet_name:
-        description: 'Worksheet Tab Name (e.g., Sheet1)'
+        description: 'Worksheet Tab Name (e.g., NIFTY200)'
         required: true
         default: 'NIFTY200'
 
@@ -47,7 +47,7 @@ jobs:
 
     - name: Fetch CSV and Add Timestamp
       env:
-        CSV_URL: ${{ github.event.inputs.csv_url || 'https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv' }}
+        CSV_URL: ${{ github.event.inputs.csv_url || 'https://www.niftyindices.com/IndexConstituent/ind_nifty200list.csv' }}
       run: |
         echo "Fetching from: $CSV_URL"
         curl -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" "$CSV_URL" > temp.csv
@@ -58,8 +58,8 @@ jobs:
     - name: Sync Data to Google Sheets
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || 'YAHAN_APNI_SHEET_ID_DAALEIN' }} # <-- Yahan bhi same ID replace karein
-        WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'Sheet1' }} 
+        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || 'YAHAN_APNI_SHEET_ID_DAALEIN' }}
+        WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'NIFTY200' }} 
       run: |
         python3 -c "
         import csv, os, json
@@ -100,10 +100,20 @@ jobs:
         try:
             print(f'Connecting to Spreadsheet ID: {spreadsheet_id}')
             sh = gc.open_by_key(spreadsheet_id)
-            worksheet = sh.worksheet(worksheet_name)
             
-            print('Clearing old data and inserting new data safely...')
-            worksheet.clear()
+            # --- YAHAN NAYA LOGIC ADD KIYA GAYA HAI ---
+            try:
+                worksheet = sh.worksheet(worksheet_name)
+                print(f'Worksheet \"{worksheet_name}\" pehle se maujud hai. Purana data clear kar rahe hain...')
+                worksheet.clear()
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet \"{worksheet_name}\" nahi mili. Nayi sheet create kar rahe hain...')
+                # Nayi sheet banate waqt dynamically rows assign karega
+                total_rows = str(len(data_to_upload) + 100)
+                worksheet = sh.add_worksheet(title=worksheet_name, rows=total_rows, cols=\"20\")
+            # ------------------------------------------
+
+            print('Inserting new data safely...')
             worksheet.update(data_to_upload, 'A1')
             
             print(f'Success! Synced {len(data_to_upload) - 1} rows to Google Sheets.')
