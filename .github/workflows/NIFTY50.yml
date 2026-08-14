@@ -10,7 +10,7 @@ on:
       csv_url:
         description: 'Official CSV URL to fetch'
         required: true
-        default: 'https://www.niftyindices.com/IndexConstituent/ind_nifty200list.csv'
+        default: 'https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv'
       spreadsheet_id:
         description: 'SHEET ID NAME HERE'
         required: true
