@@ -1,0 +1,118 @@
+name: Get YFinance Columns
+
+on:
+  workflow_dispatch:
+    inputs:
+      spreadsheet_id:
+        description: 'PEHLI SHEET ID (Jahan list save karni hai)'
+        required: true
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+      worksheet_name:
+        description: 'Naye Tab ka naam jahan columns ki list aayegi'
+        required: true
+        default: 'YF_Columns'
+
+jobs:
+  fetch_columns:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        pip install gspread google-auth yfinance --disable-pip-version-check
+
+    - name: Fetch and Sync YFinance Columns
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
+        WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'YF_Columns' }}
+      run: |
+        python3 -c "
+        import os, json
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import yfinance as yf
+
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        spreadsheet_id = os.environ.get('SPREADSHEET_ID')
+        worksheet_name = os.environ.get('WORKSHEET_NAME')
+
+        if not creds_json:
+            print('Error: GCP_CREDENTIALS secret missing hai.')
+            exit(1)
+
+        print('Fetching available columns from Yahoo Finance...')
+        
+        # Kisi bhi ek stable stock ka example le rahe hain columns nikalne ke liye
+        stock = yf.Ticker('RELIANCE.NS')
+        
+        # 1. Fast Info columns nikalna
+        try:
+            fast_info_keys = list(stock.fast_info.keys())
+            fast_info_keys.sort()
+        except Exception as e:
+            print(f'Error fetching fast_info: {e}')
+            fast_info_keys = []
+
+        # 2. Detailed Info columns nikalna (Fundamentals)
+        try:
+            detailed_info_keys = list(stock.info.keys())
+            detailed_info_keys.sort()
+        except Exception as e:
+            print(f'Error fetching detailed info: {e}')
+            detailed_info_keys = []
+
+        # Data ko Google Sheets ke format (Rows and Columns) mein set karna
+        max_length = max(len(fast_info_keys), len(detailed_info_keys))
+        
+        data_to_upload = [['Fast Info Attributes (For Live Price)', 'Detailed Info Attributes (For Fundamentals)']]
+        
+        for i in range(max_length):
+            col_a = fast_info_keys[i] if i < len(fast_info_keys) else ''
+            col_b = detailed_info_keys[i] if i < len(detailed_info_keys) else ''
+            data_to_upload.append([col_a, col_b])
+
+        # 3. Authenticate with Google
+        try:
+            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            creds_dict = json.loads(creds_json)
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            gc = gspread.authorize(credentials)
+        except Exception as e:
+            print(f'Authentication Error: {e}')
+            exit(1)
+
+        # 4. Update Google Sheet
+        try:
+            print(f'Connecting to Spreadsheet ID: {spreadsheet_id}')
+            sh = gc.open_by_key(spreadsheet_id)
+            
+            try:
+                worksheet = sh.worksheet(worksheet_name)
+                print(f'Worksheet \"{worksheet_name}\" found. Clearing old list...')
+                worksheet.clear()
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet \"{worksheet_name}\" not found. Creating new...')
+                worksheet = sh.add_worksheet(title=worksheet_name, rows=str(max_length + 10), cols='5')
+
+            worksheet.update(data_to_upload, 'A1')
+            
+            # Formatting (Bold Headers)
+            try:
+                worksheet.format('A1:B1', {'textFormat': {'bold': True}})
+            except:
+                pass
+                
+            print(f'Success! Saved {len(fast_info_keys)} fast_info columns and {len(detailed_info_keys)} detailed columns to sheet.')
+            
+        except Exception as e:
+            print(f'Error updating sheet: {e}')
+            exit(1)
+        "
