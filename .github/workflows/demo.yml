@@ -11,6 +11,10 @@ on:
         description: 'Official CSV URL to fetch'
         required: true
         default: 'https://www.niftyindices.com/IndexConstituent/ind_nifty50list.csv'
+      spreadsheet_id:
+        description: 'Google Spreadsheet ID'
+        required: true
+        default: 'YAHAN_APNI_SHEET_ID_DAALEIN' # <-- Ise apni actual Sheet ID se replace karein
       worksheet_name:
         description: 'Worksheet Tab Name (e.g., Sheet1)'
         required: true
@@ -54,7 +58,7 @@ jobs:
     - name: Sync Data to Google Sheets
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || 'YAHAN_APNI_SHEET_ID_DAALEIN' }} # <-- Yahan bhi same ID replace karein
         WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'Sheet1' }} 
       run: |
         python3 -c "
@@ -66,8 +70,8 @@ jobs:
         spreadsheet_id = os.environ.get('SPREADSHEET_ID')
         worksheet_name = os.environ.get('WORKSHEET_NAME')
 
-        if not creds_json or not spreadsheet_id:
-            print('Error: GCP_CREDENTIALS aur SPREADSHEET_ID secrets set nahi hain.')
+        if not creds_json or not spreadsheet_id or spreadsheet_id == 'YAHAN_APNI_SHEET_ID_DAALEIN':
+            print('Error: GCP_CREDENTIALS secret ya SPREADSHEET_ID missing hai.')
             exit(1)
 
         # 1. Read CSV Data
