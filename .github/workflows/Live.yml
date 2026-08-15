@@ -1,4 +1,4 @@
-name: Live Market Time-Series Sync
+name: Live Market Multi-Tab Sync
 
 on:
   schedule:
@@ -15,21 +15,13 @@ on:
         required: true
         default: 'NIFTY200'
       source_column_range:
-        description: 'Symbols kis column/range mein hain? (e.g., C2:C201)'
+        description: 'Symbols kis column/range mein hain?'
         required: true
         default: 'C2:C201'
       target_folder_id:
-        description: 'GOOGLE DRIVE FOLDER ID (Jahan daily sheet save hoti hai)'
+        description: 'GOOGLE DRIVE FOLDER ID'
         required: true
         default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
-      target_worksheet_name:
-        description: 'Tab ka naam jisme data daalna hai'
-        required: true
-        default: 'LTP_Data'
-      data_point_to_fetch:
-        description: 'Konsa data fetch karna hai? (e.g., last_price, open, day_high, day_low)'
-        required: true
-        default: 'last_price'
 
 jobs:
   fetch_live_data:
@@ -44,18 +36,15 @@ jobs:
         python-version: '3.10'
 
     - name: Install Dependencies
-      run: |
-        pip install gspread google-auth yfinance pytz --disable-pip-version-check
+      run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Fetch Live Data & Append to Daily Google Sheet
+    - name: Fetch Live Data & Update All Tabs
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
         SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
         SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C201' }}
         TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
-        TARGET_WORKSHEET_NAME: ${{ github.event.inputs.target_worksheet_name || 'LTP_Data' }}
-        DATA_POINT: ${{ github.event.inputs.data_point_to_fetch || 'last_price' }}
       run: |
         python3 -c "
         import os, json, time
@@ -71,33 +60,17 @@ jobs:
         source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
         source_range = os.environ.get('SOURCE_COLUMN_RANGE')
         folder_id = os.environ.get('TARGET_FOLDER_ID')
-        target_worksheet = os.environ.get('TARGET_WORKSHEET_NAME')
-        data_point = os.environ.get('DATA_POINT')
-
-        if not creds_json or not folder_id:
-            print('Error: Credentials ya Target Folder ID missing hai.')
-            exit(1)
 
         # 1. Google Authentication
-        try:
-            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-            creds_dict = json.loads(creds_json)
-            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-            gc = gspread.authorize(credentials)
-        except Exception as e:
-            print(f'Authentication Error: {e}'); exit(1)
+        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
 
-        # 2. Fetch Symbols from Source
-        print(f'Connecting to Source Spreadsheet range {source_range}...')
+        # 2. Fetch Symbols from Source Sheet
         try:
             source_sh = gc.open_by_key(source_id)
             cells = source_sh.worksheet(source_worksheet).get(source_range)
-            
-            ticker_list = []
-            for row in cells:
-                if row and row[0].strip():
-                    sym = row[0].strip()
-                    ticker_list.append(sym + '.NS')
+            ticker_list = [row[0].strip() + '.NS' for row in cells if row and row[0].strip()]
+            clean_symbols = [row[0].strip() for row in cells if row and row[0].strip()]
             print(f'Successfully fetched {len(ticker_list)} symbols from source.')
         except Exception as e:
             print(f'Error fetching symbols: {e}'); exit(1)
@@ -105,58 +78,68 @@ jobs:
         if not ticker_list:
             print('No symbols found. Exiting.'); exit(0)
 
-        # 3. Yfinance Data Fetch (Ultra-Fast with 3 Retries for Zero Error)
-        results_dict = {}
-        def fetch_stock_data(ticker):
-            clean_name = ticker.replace('.NS', '')
-            for attempt in range(3):  # Retry logic
-                try:
-                    val = getattr(yf.Ticker(ticker).fast_info, data_point)
-                    return clean_name, round(val, 2) if isinstance(val, float) else val
-                except Exception:
-                    time.sleep(0.5) # Wait before retry
-            return clean_name, '' # Agar fail ho toh blank
-
-        print(f'Fetching {data_point} for {len(ticker_list)} stocks using Multithreading...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            futures = [executor.submit(fetch_stock_data, t) for t in ticker_list]
-            for future in concurrent.futures.as_completed(futures):
-                t, v = future.result()
-                results_dict[t] = v
-
-        # 4. Find Today's Spreadsheet inside the Folder automatically
+        # 3. Find Today's Spreadsheet in the Folder
         ist = pytz.timezone('Asia/Kolkata')
         current_dt = datetime.now(ist)
-        today_sheet_name = current_dt.strftime('%d-%b-%Y') # Format: 15-Aug-2026
+        today_sheet_name = current_dt.strftime('%d-%b-%Y')
         fetch_time_str = current_dt.strftime('%Y-%m-%d %H:%M:%S IST')
 
         try:
-            print(f'Searching for today\'s spreadsheet \"{today_sheet_name}\" in folder...')
             target_sh = gc.open(today_sheet_name, folder_id=folder_id)
-            target_ws = target_sh.worksheet(target_worksheet)
+            worksheets = target_sh.worksheets()
         except Exception as e:
-            print(f'Error: Aaj ki sheet \"{today_sheet_name}\" folder mein nahi mili! Kya 1 AM wali Apps Script run hui thi? Details: {e}')
+            print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
             exit(1)
 
-        # 5. Smart Mapping with Existing Headers
-        existing_headers = target_ws.row_values(1)
-        if not existing_headers:
-            print('Error: Target sheet ki header row khali hai.')
-            exit(1)
+        # Tab name to yfinance attribute mapping
+        field_mapping = {
+            'dayHigh': 'day_high',
+            'dayLow': 'day_low',
+            'open': 'open',
+            'last_price': 'last_price',
+            'volume': 'last_volume',
+            'yearHigh': 'year_high',
+            'yearLow': 'year_low'
+        }
 
-        # Exact Header ke hisab se data arrange karna (Apni apni column me)
-        row_to_append = []
-        for header in existing_headers:
-            if header == 'Fetch Time':
-                row_to_append.append(fetch_time_str)
-            else:
-                row_to_append.append(results_dict.get(header, ''))
+        # 4. Loop through each tab in the spreadsheet and update data
+        for ws in worksheets:
+            tab_name = ws.title
+            data_point = field_mapping.get(tab_name, tab_name)
+            print(f'Processing tab: {tab_name} (Fetching: {data_point})...')
 
-        # 6. Append Data Safely
-        try:
-            print('Appending mapped data to today\'s sheet...')
-            target_ws.append_row(row_to_append)
-            print(f'Success! Data appended perfectly at {fetch_time_str} in sheet \"{today_sheet_name}\"')
-        except Exception as e:
-            print(f'Error updating target sheet: {e}'); exit(1)
+            results_dict = {}
+            def fetch_stock_data(ticker):
+                clean_name = ticker.replace('.NS', '')
+                for _ in range(3):
+                    try:
+                        val = getattr(yf.Ticker(ticker).fast_info, data_point)
+                        return clean_name, round(val, 2) if isinstance(val, float) else val
+                    except Exception:
+                        time.sleep(0.3)
+                return clean_name, ''
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+                futures = [executor.submit(fetch_stock_data, t) for t in ticker_list]
+                for future in concurrent.futures.as_completed(futures):
+                    t, v = future.result()
+                    results_dict[t] = v
+
+            existing_headers = ws.row_values(1)
+            if not existing_headers:
+                existing_headers = ['Fetch Time'] + clean_symbols
+                ws.update(values=[existing_headers], range_name='A1')
+
+            row_to_append = [fetch_time_str]
+            for header in existing_headers:
+                if header != 'Fetch Time':
+                    row_to_append.append(results_dict.get(header, ''))
+
+            try:
+                ws.append_row(row_to_append)
+                print(f'Successfully updated tab \"{tab_name}\"')
+            except Exception as e:
+                print(f'Error updating tab {tab_name}: {e}')
+
+        print(f'All tabs updated successfully at {fetch_time_str}!')
         "
