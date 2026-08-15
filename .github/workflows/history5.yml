@@ -14,11 +14,11 @@ on:
         required: true
         default: 'Config'
       config_period_cell:
-        description: 'Period ki value kis cell mein hai? (e.g., A1)'
+        description: 'Period ki value kis cell mein hai? (e.g., C1)'
         required: true
         default: 'C1'
       config_interval_cell:
-        description: 'Interval ki value kis cell mein hai? (e.g., A2)'
+        description: 'Interval ki value kis cell mein hai? (e.g., C2)'
         required: true
         default: 'C2'
       symbols_worksheet_name:
@@ -41,6 +41,18 @@ on:
         description: 'DUSRI SHEET ID (Jahan historical data save karna hai)'
         required: true
         default: '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM'
+      sma_1:
+        description: 'Pehla SMA (e.g., 20)'
+        required: true
+        default: '20'
+      sma_2:
+        description: 'Dusra SMA (e.g., 50)'
+        required: true
+        default: '50'
+      sma_3:
+        description: 'Teesra SMA (e.g., 200)'
+        required: true
+        default: '200'
 
 jobs:
   fetch_historical_data:
@@ -57,18 +69,21 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
 
-    - name: Seamless Overwrite & Sync to Target Sheet
+    - name: Seamless Overwrite, SMA Calc & Sync to Target Sheet
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
         CONFIG_WS: ${{ github.event.inputs.config_worksheet_name || 'Config' }}
-        CONFIG_PERIOD_CELL: ${{ github.event.inputs.config_period_cell || 'A1' }}
-        CONFIG_INTERVAL_CELL: ${{ github.event.inputs.config_interval_cell || 'A2' }}
+        CONFIG_PERIOD_CELL: ${{ github.event.inputs.config_period_cell || 'C1' }}
+        CONFIG_INTERVAL_CELL: ${{ github.event.inputs.config_interval_cell || 'C2' }}
         SYMBOLS_WS: ${{ github.event.inputs.symbols_worksheet_name || 'NIFTY200' }}
         SYMBOLS_RANGE: ${{ github.event.inputs.symbols_range || 'C2:C201' }}
         COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
         COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
         TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM' }}
+        SMA_1: ${{ github.event.inputs.sma_1 || '20' }}
+        SMA_2: ${{ github.event.inputs.sma_2 || '50' }}
+        SMA_3: ${{ github.event.inputs.sma_3 || '200' }}
       run: |
         python3 -c "
         import os, json, time
@@ -89,6 +104,13 @@ jobs:
         cols_ws_name = os.environ.get('COLS_WS')
         cols_range = os.environ.get('COLS_RANGE')
         target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+
+        # Reading SMA inputs safely
+        try:
+            sma_list = [int(os.environ.get(f'SMA_{i}', 0)) for i in range(1, 4)]
+            sma_list = [s for s in sma_list if s > 0]
+        except:
+            sma_list = []
 
         # Google Sheets column number to letter converter
         def get_col_letter(n):
@@ -118,7 +140,12 @@ jobs:
             col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
             dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
             
+            # Append SMA names to dynamic columns dynamically
+            for sma in sma_list:
+                dynamic_columns.append(f'SMA_{sma}')
+            
             print(f'Config Setup -> Period: {fetch_period}, Interval: {fetch_interval}')
+            print(f'SMAs to calculate: {sma_list}')
             print(f'Attempting to fetch data for {len(ticker_list)} symbols...')
         except Exception as e:
             print(f'Error fetching setup data: {e}'); exit(1)
@@ -126,7 +153,7 @@ jobs:
         if not ticker_list or not dynamic_columns:
             print('Missing symbols or columns in source. Exiting.'); exit(0)
 
-        # 4. Fetch Historical Data
+        # 4. Fetch Historical Data & Calculate SMAs
         master_df_dict = {}
 
         def fetch_history(ticker):
@@ -134,7 +161,11 @@ jobs:
             for _ in range(3):
                 try:
                     df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
-                    if not df.empty:
+                    if not df.empty and 'Close' in df.columns:
+                        # SUPER-FAST SMA CALCULATION
+                        for sma in sma_list:
+                            df[f'SMA_{sma}'] = df['Close'].rolling(window=sma).mean()
+                            
                         df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
                         return clean_name, df
                 except:
@@ -158,7 +189,7 @@ jobs:
         if not valid_symbols or not sorted_timestamps:
             print('Yfinance se koi data nahi mila. No updates made.'); exit(0)
 
-        print(f'Successfully fetched data for {len(valid_symbols)} symbols.')
+        print(f'Successfully fetched and calculated data for {len(valid_symbols)} symbols.')
 
         # 5. Connect Target Spreadsheet
         try:
@@ -187,6 +218,7 @@ jobs:
                     val = ''
                     if ts in master_df_dict[sym].index and col_name in master_df_dict[sym].columns:
                         raw_val = master_df_dict[sym].loc[ts, col_name]
+                        # pd.notnull ignores 'NaN' which happens in SMAs without enough data points
                         if pd.notnull(raw_val):
                             val = round(float(raw_val), 2)
                             has_valid_column_data = True
@@ -195,27 +227,25 @@ jobs:
 
             if has_valid_column_data:
                 try:
-                    # 1. Pehle data seedha A1 par Overwrite karo (No flicker, No blanking!)
+                    # 1. Pehle data seedha A1 par Overwrite karo
                     ws.update(values=data_matrix, range_name='A1')
                     
-                    # 2. Ab purana kachra clear karo jo limits ke bahar bach gaya ho
+                    # 2. Purana kachra clear karo (Seamless wipe)
                     new_rows = len(data_matrix)
                     new_cols = len(headers)
                     next_col_letter = get_col_letter(new_cols + 1)
 
                     try:
-                        # Clear leftover rows at the bottom
                         ws.batch_clear([f'A{new_rows + 1}:ZZ10000'])
-                        # Clear leftover columns at the right (if symbols were removed)
                         ws.batch_clear([f'{next_col_letter}1:ZZ{new_rows}'])
                     except:
-                        pass # Ignore errors if bounds are already clean
+                        pass
                     
-                    print(f'Tab \"{col_name}\": Seamlessly overwritten with {new_rows-1} rows of data.')
+                    print(f'Tab \"{col_name}\": Seamlessly overwritten with {new_rows-1} rows.')
                 except Exception as e:
                     print(f'Error updating {col_name}: {e}')
             else:
-                print(f'Tab \"{col_name}\": No valid data found for this metric. Skipping tab update.')
+                print(f'Tab \"{col_name}\": No sufficient data found (Maybe period too short for this SMA). Skipping.')
 
-        print('Seamless Historical Sync Completed Successfully!')
+        print('Seamless Historical Sync + SMA Optimization Completed Successfully!')
         "
