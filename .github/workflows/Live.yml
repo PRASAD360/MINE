@@ -17,11 +17,11 @@ on:
       source_column_range:
         description: 'Symbols kis column/range mein hain? (e.g., C2:C)'
         required: true
-        default: 'C2:C'
+        default: 'C2:C201'
       target_spreadsheet_id:
         description: 'DUSRI SHEET ID (Jahan live data save karna hai)'
         required: true
-        default: 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN'
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
       target_worksheet_name:
         description: 'Dusri Sheet ke tab ka naam (e.g., LTP_History)'
         required: true
