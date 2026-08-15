@@ -93,14 +93,11 @@ jobs:
             source_sh = gc.open_by_key(source_id)
             source_ws = source_sh.worksheet(source_worksheet)
             
-            # Fetching data specific to the provided range
             cells = source_ws.get(source_range)
-            
             ticker_list = []
             clean_symbols = []
             
             for row in cells:
-                # Ensuring the row is not empty and has a value
                 if row and row[0].strip():
                     val = row[0].strip()
                     clean_symbols.append(val)
@@ -113,18 +110,31 @@ jobs:
 
         # 3. Setup Timestamps
         ist = pytz.timezone('Asia/Kolkata')
-        current_time = datetime.now(ist)
-        fetch_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S IST')
+        fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
         
-        exchange_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S') 
-        
-        row_data = [fetch_time_str, exchange_time_str]
+        # Row format: [Fetch Time, Exchange Time Placeholder, Sym1, Sym2...]
+        row_data = [fetch_time_str, 'WAITING_FOR_EXCHANGE_TIME']
+        exchange_time_str = ''
 
         # 4. Fetch Live Data for the specific data_point
         print(f'Fetching {data_point} for all symbols...')
         for ticker in ticker_list:
             try:
                 stock = yf.Ticker(ticker)
+                
+                # ------ NAYA LOGIC: Exchange Time Fetch Karna ------
+                # Hum sirf ek baar exchange time fetch karenge (jo pehla stock chal jayega us se)
+                if not exchange_time_str:
+                    try:
+                        market_time_unix = stock.info.get('regularMarketTime')
+                        if market_time_unix:
+                            dt = datetime.fromtimestamp(market_time_unix, ist)
+                            exchange_time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
+                            print(f'-> Exchange Time fetched: {exchange_time_str}')
+                    except Exception as t_e:
+                        pass # Ignore if this stock doesn't have time, will try next stock
+                # ----------------------------------------------------
+
                 val = getattr(stock.fast_info, data_point)
                 if isinstance(val, float):
                     val = round(val, 2)
@@ -136,14 +146,15 @@ jobs:
             
             time.sleep(0.1)
 
+        # Placeholder ko asli Exchange Time se replace karna
+        row_data[1] = exchange_time_str if exchange_time_str else 'N/A'
+
         # 5. Append to Target Google Sheet
         try:
             target_sh = gc.open_by_key(target_id)
             
-            # Check if worksheet exists
             try:
                 target_ws = target_sh.worksheet(target_worksheet)
-                # Check if headers are present
                 first_row = target_ws.row_values(1)
                 if not first_row:
                     headers = ['Fetch Time', 'Exchange Time'] + clean_symbols
@@ -156,7 +167,7 @@ jobs:
 
             print('Appending new row to sheet...')
             target_ws.append_row(row_data)
-            print(f'Success! Data appended at {fetch_time_str}')
+            print(f'Success! Data appended at {fetch_time_str} with Exchange Time {row_data[1]}')
             
         except Exception as e:
             print(f'Error updating target sheet: {e}')
