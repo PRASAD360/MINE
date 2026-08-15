@@ -153,7 +153,7 @@ jobs:
         if not ticker_list or not dynamic_columns:
             print('Missing symbols or columns in source. Exiting.'); exit(0)
 
-        # 4. Fetch Historical Data & Calculate SMAs
+        # 4. Fetch Historical Data & Calculate SMAs with Gap Fix
         master_df_dict = {}
 
         def fetch_history(ticker):
@@ -162,9 +162,13 @@ jobs:
                 try:
                     df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
                     if not df.empty and 'Close' in df.columns:
-                        # SUPER-FAST SMA CALCULATION
+                        
+                        # SUPER-FAST ACCURATE SMA CALCULATION (Forward Fill Fix)
+                        # Yeh missing candles ke gaps ko pichle valid price se bhar dega
+                        filled_close = df['Close'].ffill()
+                        
                         for sma in sma_list:
-                            df[f'SMA_{sma}'] = df['Close'].rolling(window=sma).mean()
+                            df[f'SMA_{sma}'] = filled_close.rolling(window=sma).mean()
                             
                         df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
                         return clean_name, df
@@ -247,5 +251,5 @@ jobs:
             else:
                 print(f'Tab \"{col_name}\": No sufficient data found (Maybe period too short for this SMA). Skipping.')
 
-        print('Seamless Historical Sync + SMA Optimization Completed Successfully!')
+        print('Seamless Historical Sync + Accurate SMA Optimization Completed Successfully!')
         "
