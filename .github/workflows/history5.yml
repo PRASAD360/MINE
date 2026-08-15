@@ -1,0 +1,207 @@
+name: Dynamic Historical Multi-Tab Sync
+
+on:
+  schedule:
+    - cron: '*/15 4-10 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      source_spreadsheet_id:
+        description: 'PEHLI SHEET ID (Jahan Symbols, Columns aur Config hain)'
+        required: true
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+      config_worksheet_name:
+        description: 'Config wale tab ka naam'
+        required: true
+        default: 'Config'
+      config_period_cell:
+        description: 'Period ki value kis cell mein hai? (e.g., A1)'
+        required: true
+        default: 'A1'
+      config_interval_cell:
+        description: 'Interval ki value kis cell mein hai? (e.g., A2)'
+        required: true
+        default: 'A2'
+      symbols_worksheet_name:
+        description: 'Symbols wale tab ka naam'
+        required: true
+        default: 'NIFTY200'
+      symbols_range:
+        description: 'Symbols ki range (e.g., C2:C201)'
+        required: true
+        default: 'C2:C201'
+      columns_worksheet_name:
+        description: 'Column names wale tab ka naam'
+        required: true
+        default: 'Fetch_Columns'
+      columns_range:
+        description: 'Column names ki range (e.g., A1:A10)'
+        required: true
+        default: 'A1:A10'
+      target_spreadsheet_id:
+        description: 'DUSRI SHEET ID (Jahan historical data save karna hai)'
+        required: true
+        default: 'YAHAN_APNI_TARGET_SHEET_KI_ID_DAALEIN'
+
+jobs:
+  fetch_historical_data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
+
+    - name: Fetch History using Config & Sync to Target Sheet
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
+        CONFIG_WS: ${{ github.event.inputs.config_worksheet_name || 'Config' }}
+        CONFIG_PERIOD_CELL: ${{ github.event.inputs.config_period_cell || 'A1' }}
+        CONFIG_INTERVAL_CELL: ${{ github.event.inputs.config_interval_cell || 'A2' }}
+        SYMBOLS_WS: ${{ github.event.inputs.symbols_worksheet_name || 'NIFTY200' }}
+        SYMBOLS_RANGE: ${{ github.event.inputs.symbols_range || 'C2:C201' }}
+        COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
+        COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
+        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || 'YAHAN_APNI_TARGET_SHEET_KI_ID_DAALEIN' }}
+      run: |
+        python3 -c "
+        import os, json, time
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import yfinance as yf
+        import pandas as pd
+        from datetime import datetime
+        import concurrent.futures
+
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
+        
+        config_ws_name = os.environ.get('CONFIG_WS')
+        config_period_cell = os.environ.get('CONFIG_PERIOD_CELL')
+        config_interval_cell = os.environ.get('CONFIG_INTERVAL_CELL')
+        
+        symbols_ws_name = os.environ.get('SYMBOLS_WS')
+        symbols_range = os.environ.get('SYMBOLS_RANGE')
+        
+        cols_ws_name = os.environ.get('COLS_WS')
+        cols_range = os.environ.get('COLS_RANGE')
+        
+        target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+
+        # 1. Google Authentication
+        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
+
+        try:
+            source_sh = gc.open_by_key(source_id)
+            
+            # 2. Fetch Config (period, interval) using specific cells
+            config_sheet = source_sh.worksheet(config_ws_name)
+            fetch_period = config_sheet.acell(config_period_cell).value or '1d'
+            fetch_interval = config_sheet.acell(config_interval_cell).value or '1d'
+
+            # 3. Fetch Symbols & Columns with Dynamic Range
+            symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
+            clean_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
+            ticker_list = [sym + '.NS' for sym in clean_symbols]
+            
+            col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
+            dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
+            
+            print(f'Config Setup -> Period: {fetch_period} (from {config_period_cell}), Interval: {fetch_interval} (from {config_interval_cell})')
+            print(f'Fetched {len(ticker_list)} symbols and {len(dynamic_columns)} columns.')
+        except Exception as e:
+            print(f'Error fetching setup data: {e}'); exit(1)
+
+        if not ticker_list or not dynamic_columns:
+            print('Missing data in ranges. Exiting.'); exit(0)
+
+        # 4. Fetch Historical Data via Multithreading
+        master_df_dict = {}
+
+        def fetch_history(ticker):
+            clean_name = ticker.replace('.NS', '')
+            for _ in range(3):
+                try:
+                    df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
+                    if not df.empty:
+                        # Convert timezone aware index to string format for Google Sheets
+                        df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
+                        return clean_name, df
+                except Exception:
+                    time.sleep(0.3)
+            return clean_name, pd.DataFrame()
+
+        print('Fetching historical data...')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+            futures = [executor.submit(fetch_history, t) for t in ticker_list]
+            for future in concurrent.futures.as_completed(futures):
+                name, df = future.result()
+                if not df.empty:
+                    master_df_dict[name] = df
+
+        # Collect all unique timestamps from the fetched data
+        all_timestamps = set()
+        for df in master_df_dict.values():
+            all_timestamps.update(df.index.tolist())
+        sorted_timestamps = sorted(list(all_timestamps))
+
+        if not sorted_timestamps:
+            print('No historical data returned from Yahoo Finance.'); exit(0)
+
+        # 5. Open Target Spreadsheet directly via ID
+        try:
+            target_sh = gc.open_by_key(target_id)
+        except Exception as e:
+            print(f'Error: Target Spreadsheet ID galat hai ya access nahi hai! {e}'); exit(1)
+
+        existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
+
+        # 6. Process and Append Data to Tabs
+        for col_name in dynamic_columns:
+            if col_name not in existing_worksheets:
+                print(f'Tab \"{col_name}\" creating...')
+                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(clean_symbols) + 5))
+            else:
+                ws = existing_worksheets[col_name]
+
+            # Setup Headers
+            existing_headers = ws.row_values(1)
+            if not existing_headers:
+                existing_headers = ['Timestamp'] + clean_symbols
+                ws.update(values=[existing_headers], range_name='A1')
+            
+            # Fetch existing timestamps to avoid duplicates
+            existing_timestamps = ws.col_values(1)[1:] # Skip header
+            existing_timestamps_set = set(existing_timestamps)
+
+            rows_to_append = []
+            for ts in sorted_timestamps:
+                if ts not in existing_timestamps_set:
+                    row = [ts]
+                    for header in existing_headers:
+                        if header != 'Timestamp':
+                            val = ''
+                            if header in master_df_dict and ts in master_df_dict[header].index and col_name in master_df_dict[header].columns:
+                                raw_val = master_df_dict[header].loc[ts, col_name]
+                                val = round(float(raw_val), 2) if pd.notnull(raw_val) else ''
+                            row.append(val)
+                    rows_to_append.append(row)
+
+            if rows_to_append:
+                try:
+                    ws.append_rows(rows_to_append)
+                    print(f'Tab \"{col_name}\": Added {len(rows_to_append)} new historical rows.')
+                except Exception as e:
+                    print(f'Error updating {col_name}: {e}')
+            else:
+                print(f'Tab \"{col_name}\": No new rows to add (Data already up to date).')
+
+        print('Historical Sync Completed Successfully!')
+        "
