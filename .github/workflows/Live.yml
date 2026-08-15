@@ -15,17 +15,17 @@ on:
         required: true
         default: 'NIFTY200'
       source_column_range:
-        description: 'Symbols kis column/range mein hain? (e.g., C2:C)'
+        description: 'Symbols kis column/range mein hain? (e.g., C2:C201)'
         required: true
         default: 'C2:C201'
-      target_spreadsheet_id:
-        description: 'DUSRI SHEET ID (Jahan live data save karna hai)'
+      target_folder_id:
+        description: 'GOOGLE DRIVE FOLDER ID (Jahan daily sheet save hoti hai)'
         required: true
-        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+        default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
       target_worksheet_name:
-        description: 'Dusri Sheet ke tab ka naam (e.g., LTP_History)'
+        description: 'Tab ka naam jisme data daalna hai'
         required: true
-        default: 'LTP_History'
+        default: 'LTP_Data'
       data_point_to_fetch:
         description: 'Konsa data fetch karna hai? (e.g., last_price, open, day_high, day_low)'
         required: true
@@ -47,14 +47,14 @@ jobs:
       run: |
         pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Fetch Live Data & Append to Google Sheet
+    - name: Fetch Live Data & Append to Daily Google Sheet
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
         SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
-        SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C' }}
-        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN' }}
-        TARGET_WORKSHEET_NAME: ${{ github.event.inputs.target_worksheet_name || 'LTP_History' }}
+        SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C201' }}
+        TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
+        TARGET_WORKSHEET_NAME: ${{ github.event.inputs.target_worksheet_name || 'LTP_Data' }}
         DATA_POINT: ${{ github.event.inputs.data_point_to_fetch || 'last_price' }}
       run: |
         python3 -c "
@@ -70,12 +70,12 @@ jobs:
         source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
         source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
         source_range = os.environ.get('SOURCE_COLUMN_RANGE')
-        target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+        folder_id = os.environ.get('TARGET_FOLDER_ID')
         target_worksheet = os.environ.get('TARGET_WORKSHEET_NAME')
         data_point = os.environ.get('DATA_POINT')
 
-        if not creds_json or target_id == 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN':
-            print('Error: Credentials ya Target Spreadsheet ID missing hai.')
+        if not creds_json or not folder_id:
+            print('Error: Credentials ya Target Folder ID missing hai.')
             exit(1)
 
         # 1. Google Authentication
@@ -93,18 +93,16 @@ jobs:
             source_sh = gc.open_by_key(source_id)
             cells = source_sh.worksheet(source_worksheet).get(source_range)
             
-            clean_symbols = []
             ticker_list = []
             for row in cells:
                 if row and row[0].strip():
                     sym = row[0].strip()
-                    clean_symbols.append(sym)
                     ticker_list.append(sym + '.NS')
-            print(f'Successfully fetched {len(clean_symbols)} symbols.')
+            print(f'Successfully fetched {len(ticker_list)} symbols from source.')
         except Exception as e:
             print(f'Error fetching symbols: {e}'); exit(1)
 
-        if not clean_symbols:
+        if not ticker_list:
             print('No symbols found. Exiting.'); exit(0)
 
         # 3. Yfinance Data Fetch (Ultra-Fast with 3 Retries for Zero Error)
@@ -117,7 +115,7 @@ jobs:
                     return clean_name, round(val, 2) if isinstance(val, float) else val
                 except Exception:
                     time.sleep(0.5) # Wait before retry
-            return clean_name, '' # Agar 3 baar me bhi fail ho, to blank chhod do
+            return clean_name, '' # Agar fail ho toh blank
 
         print(f'Fetching {data_point} for {len(ticker_list)} stocks using Multithreading...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
@@ -126,33 +124,25 @@ jobs:
                 t, v = future.result()
                 results_dict[t] = v
 
-        # 4. Target Sheet Logic (Smart Mapping)
+        # 4. Find Today's Spreadsheet inside the Folder automatically
         ist = pytz.timezone('Asia/Kolkata')
-        fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
+        current_dt = datetime.now(ist)
+        today_sheet_name = current_dt.strftime('%d-%b-%Y') # Format: 15-Aug-2026
+        fetch_time_str = current_dt.strftime('%Y-%m-%d %H:%M:%S IST')
 
-        target_sh = gc.open_by_key(target_id)
         try:
+            print(f'Searching for today\'s spreadsheet \"{today_sheet_name}\" in folder...')
+            target_sh = gc.open(today_sheet_name, folder_id=folder_id)
             target_ws = target_sh.worksheet(target_worksheet)
-        except gspread.exceptions.WorksheetNotFound:
-            target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 1))
+        except Exception as e:
+            print(f'Error: Aaj ki sheet \"{today_sheet_name}\" folder mein nahi mili! Kya 1 AM wali Apps Script run hui thi? Details: {e}')
+            exit(1)
 
-        # Get existing headers from Row 1
+        # 5. Smart Mapping with Existing Headers
         existing_headers = target_ws.row_values(1)
-
-        # Agar sheet nayi hai, to headers lagao
         if not existing_headers:
-            existing_headers = ['Fetch Time'] + clean_symbols
-            target_ws.append_row(existing_headers)
-        else:
-            # Agar purani sheet hai aur NIFTY200 me koi naya stock add hua hai, to header list me update karo
-            new_cols = [s for s in clean_symbols if s not in existing_headers]
-            if new_cols:
-                existing_headers.extend(new_cols)
-                # Google Sheet ki Row 1 ko update karna bina error ke
-                cell_list = target_ws.range(1, 1, 1, len(existing_headers))
-                for i, val in enumerate(existing_headers):
-                    cell_list[i].value = val
-                target_ws.update_cells(cell_list)
+            print('Error: Target sheet ki header row khali hai.')
+            exit(1)
 
         # Exact Header ke hisab se data arrange karna (Apni apni column me)
         row_to_append = []
@@ -160,21 +150,13 @@ jobs:
             if header == 'Fetch Time':
                 row_to_append.append(fetch_time_str)
             else:
-                row_to_append.append(results_dict.get(header, '')) # Agar koi purana stock NIFTY200 se nikal gaya hai, to uski column blank rahegi
+                row_to_append.append(results_dict.get(header, ''))
 
-        # 5. Append and Clean (Resize)
+        # 6. Append Data Safely
         try:
-            print('Appending mapped data to sheet...')
+            print('Appending mapped data to today\'s sheet...')
             target_ws.append_row(row_to_append)
-            
-            # Jo column faltu hain unko clear (delete) karna
-            current_cols = target_ws.col_count
-            needed_cols = len(existing_headers)
-            if current_cols > needed_cols:
-                print(f'Clearing {current_cols - needed_cols} extra blank columns...')
-                target_ws.resize(cols=needed_cols)
-                
-            print(f'Success! Data appended perfectly at {fetch_time_str}')
+            print(f'Success! Data appended perfectly at {fetch_time_str} in sheet \"{today_sheet_name}\"')
         except Exception as e:
             print(f'Error updating target sheet: {e}'); exit(1)
         "
