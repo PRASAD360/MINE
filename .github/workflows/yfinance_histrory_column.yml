@@ -1,0 +1,107 @@
+name: Get YFinance history Columns
+
+on:
+  workflow_dispatch:
+    inputs:
+      spreadsheet_id:
+        description: 'PEHLI SHEET ID (Jahan list save karni hai)'
+        required: true
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+      worksheet_name:
+        description: 'Naye Tab ka naam jahan history columns ki list aayegi'
+        required: true
+        default: 'YF_History_Columns'
+
+jobs:
+  fetch_columns:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        pip install gspread google-auth yfinance --disable-pip-version-check
+
+    - name: Fetch and Sync History Columns
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
+        WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'YF_History_Columns' }}
+      run: |
+        python3 -c "
+        import os, json
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import yfinance as yf
+
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        spreadsheet_id = os.environ.get('SPREADSHEET_ID')
+        worksheet_name = os.environ.get('WORKSHEET_NAME')
+
+        if not creds_json:
+            print('Error: GCP_CREDENTIALS secret missing hai.')
+            exit(1)
+
+        print('Fetching history columns from Yahoo Finance...')
+        
+        stock = yf.Ticker('RELIANCE.NS')
+        
+        # History DataFrame ke exact columns nikalna
+        try:
+            df = stock.history(period='1d')
+            history_columns = list(df.columns)
+            history_columns.sort()
+        except Exception as e:
+            print(f'Error fetching history columns: {e}')
+            history_columns = []
+
+        # Google Sheets ke format mein data taiyar karna
+        data_to_upload = [['History DataFrame Columns (Use exactly in code)']]
+        for col in history_columns:
+            data_to_upload.append([col])
+
+        max_length = len(history_columns)
+
+        # Authenticate with Google
+        try:
+            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            creds_dict = json.loads(creds_json)
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            gc = gspread.authorize(credentials)
+        except Exception as e:
+            print(f'Authentication Error: {e}')
+            exit(1)
+
+        # Update Google Sheet
+        try:
+            print(f'Connecting to Spreadsheet ID: {spreadsheet_id}')
+            sh = gc.open_by_key(spreadsheet_id)
+            
+            try:
+                worksheet = sh.worksheet(worksheet_name)
+                print(f'Worksheet \"{worksheet_name}\" found. Clearing old list...')
+                worksheet.clear()
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet \"{worksheet_name}\" not found. Creating new...')
+                worksheet = sh.add_worksheet(title=worksheet_name, rows=str(max_length + 10), cols='5')
+
+            worksheet.update(data_to_upload, 'A1')
+            
+            # Formatting (Bold Header)
+            try:
+                worksheet.format('A1:A1', {'textFormat': {'bold': True}})
+            except:
+                pass
+                
+            print(f'Success! Saved {len(history_columns)} history columns to sheet: {history_columns}')
+            
+        except Exception as e:
+            print(f'Error updating sheet: {e}')
+            exit(1)
+        "
