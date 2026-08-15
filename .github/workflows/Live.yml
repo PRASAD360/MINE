@@ -83,7 +83,7 @@ jobs:
             'dayHigh': 'High',
             'dayLow': 'Low',
             'lastPrice': 'Close',
-            'volume': 'Volume'
+            'lastVolume': 'Volume'
         }
 
         master_data = {sym: {} for sym in clean_symbols}
