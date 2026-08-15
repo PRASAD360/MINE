@@ -1,4 +1,4 @@
-name: Live Market Multi-Tab History Sync
+name: Live Market Dynamic Multi-Tab Sync
 
 on:
   schedule:
@@ -6,17 +6,25 @@ on:
   workflow_dispatch:
     inputs:
       source_spreadsheet_id:
-        description: 'PEHLI SHEET ID (Jahan NIFTY200 ke symbols hain)'
+        description: 'PEHLI SHEET ID (Jahan Symbols aur Column Names hain)'
         required: true
         default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-      source_worksheet_name:
-        description: 'Pehli Sheet ke tab ka naam'
+      symbols_worksheet_name:
+        description: 'Symbols wale tab ka naam'
         required: true
         default: 'NIFTY200'
-      source_column_range:
-        description: 'Symbols kis column/range mein hain?'
+      symbols_column_range:
+        description: 'Symbols kis range mein hain?'
         required: true
         default: 'C2:C201'
+      columns_worksheet_name:
+        description: 'Column names wale tab ka naam'
+        required: true
+        default: 'Fetch_Columns'
+      columns_range:
+        description: 'Column names kis range mein hain?'
+        required: true
+        default: 'A1:A10'
       target_folder_id:
         description: 'GOOGLE DRIVE FOLDER ID'
         required: true
@@ -30,19 +38,21 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: setup-python@v4
       with:
         python-version: '3.10'
 
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Fetch Reliable Data via History & Update All Tabs
+    - name: Smart Dynamic Sync with Auto-Tab Creation
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
-        SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
-        SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C201' }}
+        SYMBOLS_WS: ${{ github.event.inputs.symbols_worksheet_name || 'NIFTY200' }}
+        SYMBOLS_RANGE: ${{ github.event.inputs.symbols_column_range || 'C2:C201' }}
+        COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
+        COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
         TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
       run: |
         python3 -c "
@@ -56,36 +66,36 @@ jobs:
 
         creds_json = os.environ.get('GCP_CREDENTIALS')
         source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
-        source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
-        source_range = os.environ.get('SOURCE_COLUMN_RANGE')
+        symbols_ws_name = os.environ.get('SYMBOLS_WS')
+        symbols_range = os.environ.get('SYMBOLS_RANGE')
+        cols_ws_name = os.environ.get('COLS_WS')
+        cols_range = os.environ.get('COLS_RANGE')
         folder_id = os.environ.get('TARGET_FOLDER_ID')
 
         # 1. Google Authentication
         scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
         gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
 
-        # 2. Fetch Symbols from Source Sheet
         try:
             source_sh = gc.open_by_key(source_id)
-            cells = source_sh.worksheet(source_worksheet).get(source_range)
-            ticker_list = [row[0].strip() + '.NS' for row in cells if row and row[0].strip()]
-            clean_symbols = [row[0].strip() for row in cells if row and row[0].strip()]
-            print(f'Successfully fetched {len(ticker_list)} symbols.')
+            
+            # 2. Fetch Symbols
+            symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
+            ticker_list = [row[0].strip() + '.NS' for row in symbol_cells if row and row[0].strip()]
+            clean_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
+            
+            # 3. Fetch Dynamic Column Names from Sheet
+            col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
+            dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
+            
+            print(f'Successfully fetched {len(ticker_list)} symbols and {len(dynamic_columns)} columns: {dynamic_columns}')
         except Exception as e:
-            print(f'Error fetching symbols: {e}'); exit(1)
+            print(f'Error fetching setup data from source sheet: {e}'); exit(1)
 
-        if not ticker_list:
-            print('No symbols found. Exiting.'); exit(0)
+        if not ticker_list or not dynamic_columns:
+            print('No symbols or columns found. Exiting.'); exit(0)
 
-        # 3. FIELD MAPPING (Tab Name -> History DataFrame Column)
-        field_mapping = {
-            'open': 'Open',
-            'dayHigh': 'High',
-            'dayLow': 'Low',
-            'lastPrice': 'Close',
-            'lastVolume': 'Volume'
-        }
-
+        # 4. Fetch History Data via Multithreading
         master_data = {sym: {} for sym in clean_symbols}
 
         def fetch_stock_history(ticker):
@@ -96,13 +106,14 @@ jobs:
                     df = yf.Ticker(ticker).history(period='1d')
                     if not df.empty:
                         row = df.iloc[-1]
-                        for tab_title, col_name in field_mapping.items():
+                        for col_name in dynamic_columns:
+                            # DataFrame se exact value nikalna (agar column exist karta ho)
                             val = row.get(col_name, '')
-                            stock_info[tab_title] = round(float(val), 2) if val != '' else ''
+                            stock_info[col_name] = round(float(val), 2) if val != '' and val is not None else ''
                         return clean_name, stock_info
                 except Exception:
                     time.sleep(0.3)
-            return clean_name, {k: '' for k in field_mapping.keys()}
+            return clean_name, {k: '' for k in dynamic_columns}
 
         print('Fetching accurate stock metrics using history API...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
@@ -111,7 +122,7 @@ jobs:
                 name, data = future.result()
                 master_data[name] = data
 
-        # 4. Open Today's Spreadsheet
+        # 5. Open Today's Spreadsheet in Target Folder
         ist = pytz.timezone('Asia/Kolkata')
         current_dt = datetime.now(ist)
         today_sheet_name = current_dt.strftime('%d-%b-%Y')
@@ -119,33 +130,38 @@ jobs:
 
         try:
             target_sh = gc.open(today_sheet_name, folder_id=folder_id)
-            worksheets = target_sh.worksheets()
         except Exception as e:
             print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
             exit(1)
 
-        # 5. Instant Update across all matching tabs
-        for ws in worksheets:
-            tab_name = ws.title
-            if tab_name not in field_mapping:
-                continue 
+        existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
+        # 6. Dynamic Tab Creation & Data Appending
+        for col_name in dynamic_columns:
+            if col_name not in existing_worksheets:
+                print(f'Tab \"{col_name}\" nahi mila. Naya tab create kiya ja raha hai...')
+                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(clean_symbols) + 5))
+            else:
+                ws = existing_worksheets[col_name]
+
+            # Headers check & update
             existing_headers = ws.row_values(1)
             if not existing_headers:
                 existing_headers = ['Fetch Time'] + clean_symbols
                 ws.update(values=[existing_headers], range_name='A1')
 
+            # Row data taiyar karna
             row_to_append = [fetch_time_str]
             for header in existing_headers:
                 if header != 'Fetch Time':
                     stock_metrics = master_data.get(header, {})
-                    row_to_append.append(stock_metrics.get(tab_name, ''))
+                    row_to_append.append(stock_metrics.get(col_name, ''))
 
             try:
                 ws.append_row(row_to_append)
-                print(f'Successfully updated tab: {tab_name}')
+                print(f'Successfully updated tab: {col_name}')
             except Exception as e:
-                print(f'Error updating tab {tab_name}: {e}')
+                print(f'Error updating tab {col_name}: {e}')
 
-        print(f'Reliable sync completed at {fetch_time_str}!')
+        print(f'Smart dynamic sync completed successfully at {fetch_time_str}!')
         "
