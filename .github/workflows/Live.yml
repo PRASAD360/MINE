@@ -79,13 +79,13 @@ jobs:
 
         # 3. FAST FETCH: Ek hi baar mein saare data points ek sath nikalna
         field_mapping = {
-            'dayHigh': 'day_high',
-            'dayLow': 'day_low',
+            'dayHigh': 'dayhigh',
+            'dayLow': 'daylow',
             'open': 'open',
-            'last_price': 'last_price',
-            'volume': 'last_volume',
-            'yearHigh': 'year_high',
-            'yearLow': 'year_low'
+            'last_price': 'lastprice',
+            'volume': 'lastvolume',
+            'yearHigh': 'yearhigh',
+            'yearLow': 'yearlow'
         }
 
         master_data = {sym: {} for sym in clean_symbols}
