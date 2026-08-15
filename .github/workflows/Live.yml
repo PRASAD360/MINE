@@ -58,12 +58,13 @@ jobs:
         DATA_POINT: ${{ github.event.inputs.data_point_to_fetch || 'last_price' }}
       run: |
         python3 -c "
-        import os, json, time
+        import os, json
         import gspread
         from google.oauth2.service_account import Credentials
         import yfinance as yf
         from datetime import datetime
         import pytz
+        import concurrent.futures
 
         creds_json = os.environ.get('GCP_CREDENTIALS')
         source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
@@ -87,87 +88,82 @@ jobs:
             print(f'Authentication Error: {e}')
             exit(1)
 
-        # 2. Fetch Symbols from Source Sheet using the Range
-        print(f'Connecting to Source Spreadsheet to fetch symbols from range {source_range}...')
+        # 2. Fetch Symbols
+        print(f'Connecting to Source Spreadsheet range {source_range}...')
         try:
             source_sh = gc.open_by_key(source_id)
             source_ws = source_sh.worksheet(source_worksheet)
-            
             cells = source_ws.get(source_range)
+            
             ticker_list = []
             clean_symbols = []
-            
             for row in cells:
                 if row and row[0].strip():
                     val = row[0].strip()
                     clean_symbols.append(val)
                     ticker_list.append(val + '.NS')
-            
             print(f'Successfully fetched {len(ticker_list)} symbols.')
         except Exception as e:
             print(f'Error fetching symbols: {e}')
             exit(1)
 
+        if not ticker_list:
+            print('No symbols found. Exiting.')
+            exit(0)
+
         # 3. Setup Timestamps
         ist = pytz.timezone('Asia/Kolkata')
         fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
-        
-        # Row format: [Fetch Time, Exchange Time Placeholder, Sym1, Sym2...]
-        row_data = [fetch_time_str, 'WAITING_FOR_EXCHANGE_TIME']
-        exchange_time_str = ''
+        exchange_time_str = 'N/A'
 
-        # 4. Fetch Live Data for the specific data_point
-        print(f'Fetching {data_point} for all symbols...')
-        for ticker in ticker_list:
+        # Exchange time pehle stock se fetch karna (Fast Approach)
+        print('Fetching Exchange Time from market...')
+        try:
+            market_time_unix = yf.Ticker(ticker_list[0]).info.get('regularMarketTime')
+            if market_time_unix:
+                exchange_time_str = datetime.fromtimestamp(market_time_unix, ist).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            print('Could not fetch exact exchange time, using Fetch Time as fallback.')
+            exchange_time_str = fetch_time_str
+
+        # 4. Multithreading Function (Parallel Processing)
+        results_dict = {}
+        def fetch_stock_data(ticker):
             try:
-                stock = yf.Ticker(ticker)
-                
-                # ------ NAYA LOGIC: Exchange Time Fetch Karna ------
-                # Hum sirf ek baar exchange time fetch karenge (jo pehla stock chal jayega us se)
-                if not exchange_time_str:
-                    try:
-                        market_time_unix = stock.info.get('regularMarketTime')
-                        if market_time_unix:
-                            dt = datetime.fromtimestamp(market_time_unix, ist)
-                            exchange_time_str = dt.strftime('%Y-%m-%d %H:%M:%S')
-                            print(f'-> Exchange Time fetched: {exchange_time_str}')
-                    except Exception as t_e:
-                        pass # Ignore if this stock doesn't have time, will try next stock
-                # ----------------------------------------------------
+                val = getattr(yf.Ticker(ticker).fast_info, data_point)
+                return ticker, round(val, 2) if isinstance(val, float) else val
+            except Exception:
+                return ticker, 'N/A'
 
-                val = getattr(stock.fast_info, data_point)
-                if isinstance(val, float):
-                    val = round(val, 2)
-                row_data.append(val)
-                print(f'{ticker}: {val}')
-            except Exception as e:
-                print(f'Warning: Failed for {ticker}')
-                row_data.append('N/A')
-            
-            time.sleep(0.1)
+        # Parallel fetching using 15 workers (Super Fast)
+        print(f'Fetching {data_point} for {len(ticker_list)} stocks using Multithreading...')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+            futures = [executor.submit(fetch_stock_data, t) for t in ticker_list]
+            for future in concurrent.futures.as_completed(futures):
+                t, v = future.result()
+                results_dict[t] = v
 
-        # Placeholder ko asli Exchange Time se replace karna
-        row_data[1] = exchange_time_str if exchange_time_str else 'N/A'
+        # Row Build Karna (Target sheet ke sequence ke hisab se)
+        row_data = [fetch_time_str, exchange_time_str]
+        for ticker in ticker_list:
+            row_data.append(results_dict.get(ticker, 'N/A'))
 
-        # 5. Append to Target Google Sheet
+        # 5. Append to Google Sheet
         try:
             target_sh = gc.open_by_key(target_id)
-            
             try:
                 target_ws = target_sh.worksheet(target_worksheet)
                 first_row = target_ws.row_values(1)
                 if not first_row:
-                    headers = ['Fetch Time', 'Exchange Time'] + clean_symbols
-                    target_ws.append_row(headers)
+                    target_ws.append_row(['Fetch Time', 'Exchange Time'] + clean_symbols)
             except gspread.exceptions.WorksheetNotFound:
-                print(f'Worksheet not found. Creating new...')
+                print('Worksheet not found. Creating new...')
                 target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 2))
-                headers = ['Fetch Time', 'Exchange Time'] + clean_symbols
-                target_ws.append_row(headers)
+                target_ws.append_row(['Fetch Time', 'Exchange Time'] + clean_symbols)
 
-            print('Appending new row to sheet...')
+            print('Appending data to sheet...')
             target_ws.append_row(row_data)
-            print(f'Success! Data appended at {fetch_time_str} with Exchange Time {row_data[1]}')
+            print(f'Success! Data appended rapidly at {fetch_time_str}')
             
         except Exception as e:
             print(f'Error updating target sheet: {e}')
