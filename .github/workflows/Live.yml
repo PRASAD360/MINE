@@ -111,20 +111,9 @@ jobs:
             print('No symbols found. Exiting.')
             exit(0)
 
-        # 3. Setup Timestamps
+        # 3. Setup Timestamp (Only Fetch Time)
         ist = pytz.timezone('Asia/Kolkata')
         fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
-        exchange_time_str = 'N/A'
-
-        # Exchange time pehle stock se fetch karna (Fast Approach)
-        print('Fetching Exchange Time from market...')
-        try:
-            market_time_unix = yf.Ticker(ticker_list[0]).info.get('regularMarketTime')
-            if market_time_unix:
-                exchange_time_str = datetime.fromtimestamp(market_time_unix, ist).strftime('%Y-%m-%d %H:%M:%S')
-        except Exception as e:
-            print('Could not fetch exact exchange time, using Fetch Time as fallback.')
-            exchange_time_str = fetch_time_str
 
         # 4. Multithreading Function (Parallel Processing)
         results_dict = {}
@@ -135,7 +124,6 @@ jobs:
             except Exception:
                 return ticker, 'N/A'
 
-        # Parallel fetching using 15 workers (Super Fast)
         print(f'Fetching {data_point} for {len(ticker_list)} stocks using Multithreading...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
             futures = [executor.submit(fetch_stock_data, t) for t in ticker_list]
@@ -143,8 +131,8 @@ jobs:
                 t, v = future.result()
                 results_dict[t] = v
 
-        # Row Build Karna (Target sheet ke sequence ke hisab se)
-        row_data = [fetch_time_str, exchange_time_str]
+        # Row Build Karna: [Fetch Time, RELIANCE, TCS, INFY...]
+        row_data = [fetch_time_str]
         for ticker in ticker_list:
             row_data.append(results_dict.get(ticker, 'N/A'))
 
@@ -155,11 +143,11 @@ jobs:
                 target_ws = target_sh.worksheet(target_worksheet)
                 first_row = target_ws.row_values(1)
                 if not first_row:
-                    target_ws.append_row(['Fetch Time', 'Exchange Time'] + clean_symbols)
+                    target_ws.append_row(['Fetch Time'] + clean_symbols)
             except gspread.exceptions.WorksheetNotFound:
                 print('Worksheet not found. Creating new...')
-                target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 2))
-                target_ws.append_row(['Fetch Time', 'Exchange Time'] + clean_symbols)
+                target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 1))
+                target_ws.append_row(['Fetch Time'] + clean_symbols)
 
             print('Appending data to sheet...')
             target_ws.append_row(row_data)
