@@ -9,7 +9,7 @@ on:
       target_folder_id:
         description: 'GOOGLE DRIVE FOLDER ID (Jahan nayi sheet banegi)'
         required: true
-        default: 'APNE_FOLDER_KI_ID_YAHAN_DAALEIN'
+        default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
 
 jobs:
   create_blank_sheet:
