@@ -1,4 +1,4 @@
-name: Live Market Multi-Tab Fast Sync
+name: Live Market Last Price Sync
 
 on:
   schedule:
@@ -21,6 +21,10 @@ on:
         description: 'GOOGLE DRIVE FOLDER ID'
         required: true
         default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
+      target_worksheet_name:
+        description: 'Tab ka naam jisme data daalna hai'
+        required: true
+        default: 'LTP_Data'
 
 jobs:
   fetch_live_data:
@@ -37,13 +41,14 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Fetch Data Once and Update All Tabs Instantly
+    - name: Fetch Only Last Price & Append
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
         SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
         SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C201' }}
         TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
+        TARGET_WORKSHEET_NAME: ${{ github.event.inputs.target_worksheet_name || 'LTP_Data' }}
       run: |
         python3 -c "
         import os, json, time
@@ -59,6 +64,7 @@ jobs:
         source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
         source_range = os.environ.get('SOURCE_COLUMN_RANGE')
         folder_id = os.environ.get('TARGET_FOLDER_ID')
+        target_worksheet = os.environ.get('TARGET_WORKSHEET_NAME')
 
         # 1. Google Authentication
         scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
@@ -77,39 +83,25 @@ jobs:
         if not ticker_list:
             print('No symbols found. Exiting.'); exit(0)
 
-        # 3. EXACT FIELD MAPPING (Yahoo Finance Fast Info Attributes)
-        field_mapping = {
-            'dayHigh': 'dayHigh',
-            'dayLow': 'dayLow',
-            'open': 'open',
-            'lastPrice': 'lastPrice',
-            'lastVolume': 'lastVolume',
-            'yearHigh': 'yearHigh',
-            'yearLow': 'yearLow'
-        }
+        # 3. FAST FETCH: Sirf lastPrice nikalna
+        results_dict = {}
 
-        master_data = {sym: {} for sym in clean_symbols}
-
-        def fetch_all_stock_data(ticker):
+        def fetch_last_price(ticker):
             clean_name = ticker.replace('.NS', '')
-            stock_info = {}
             for attempt in range(3):
                 try:
-                    fi = yf.Ticker(ticker).fast_info
-                    for tab_title, attr in field_mapping.items():
-                        val = getattr(fi, attr, '')
-                        stock_info[tab_title] = round(val, 2) if isinstance(val, float) else val
-                    return clean_name, stock_info
+                    val = yf.Ticker(ticker).fast_info.lastPrice
+                    return clean_name, round(val, 2) if isinstance(val, float) else val
                 except Exception:
                     time.sleep(0.3)
-            return clean_name, {k: '' for k in field_mapping.keys()}
+            return clean_name, ''
 
-        print('Fetching all stock metrics using high-speed multithreading...')
+        print('Fetching last price using high-speed multithreading...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
-            futures = [executor.submit(fetch_all_stock_data, t) for t in ticker_list]
+            futures = [executor.submit(fetch_last_price, t) for t in ticker_list]
             for future in concurrent.futures.as_completed(futures):
-                name, data = future.result()
-                master_data[name] = data
+                name, val = future.result()
+                results_dict[name] = val
 
         # 4. Open Today's Spreadsheet
         ist = pytz.timezone('Asia/Kolkata')
@@ -119,33 +111,27 @@ jobs:
 
         try:
             target_sh = gc.open(today_sheet_name, folder_id=folder_id)
-            worksheets = target_sh.worksheets()
+            target_ws = target_sh.worksheet(target_worksheet)
         except Exception as e:
-            print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
+            print(f'Error: Spreadsheet ya worksheet nahi mili! {e}')
             exit(1)
 
-        # 5. Instant Update across all existing tabs matching field_mapping keys
-        for ws in worksheets:
-            tab_name = ws.title
-            if tab_name not in field_mapping:
-                continue 
+        # 5. Smart Mapping & Append
+        existing_headers = target_ws.row_values(1)
+        if not existing_headers:
+            existing_headers = ['Fetch Time'] + clean_symbols
+            target_ws.update(values=[existing_headers], range_name='A1')
 
-            existing_headers = ws.row_values(1)
-            if not existing_headers:
-                existing_headers = ['Fetch Time'] + clean_symbols
-                ws.update(values=[existing_headers], range_name='A1')
+        row_to_append = [fetch_time_str]
+        for header in existing_headers:
+            if header != 'Fetch Time':
+                row_to_append.append(results_dict.get(header, ''))
 
-            row_to_append = [fetch_time_str]
-            for header in existing_headers:
-                if header != 'Fetch Time':
-                    stock_metrics = master_data.get(header, {})
-                    row_to_append.append(stock_metrics.get(tab_name, ''))
+        try:
+            target_ws.append_row(row_to_append)
+            print(f'Successfully updated last price in tab: {target_worksheet}')
+        except Exception as e:
+            print(f'Error updating sheet: {e}')
 
-            try:
-                ws.append_row(row_to_append)
-                print(f'Successfully updated tab: {tab_name}')
-            except Exception as e:
-                print(f'Error updating tab {tab_name}: {e}')
-
-        print(f'Lightning fast sync completed at {fetch_time_str}!')
+        print(f'Sync completed at {fetch_time_str}!')
         "
