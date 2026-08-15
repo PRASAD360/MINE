@@ -1,0 +1,71 @@
+name: 1. Create Daily Spreadsheet (1 AM)
+
+on:
+  schedule:
+    # 19:30 UTC = Indian Time raat 1:00 AM (Next Day)
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+    inputs:
+      target_folder_id:
+        description: 'GOOGLE DRIVE FOLDER ID (Jahan nayi sheet banegi)'
+        required: true
+        default: 'APNE_FOLDER_KI_ID_YAHAN_DAALEIN'
+
+jobs:
+  create_blank_sheet:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: pip install gspread google-auth pytz --disable-pip-version-check
+
+    - name: Create Daily Spreadsheet
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || 'APNE_FOLDER_KI_ID_YAHAN_DAALEIN' }}
+      run: |
+        python3 -c "
+        import os, json
+        import gspread
+        from google.oauth2.service_account import Credentials
+        from datetime import datetime
+        import pytz
+
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        folder_id = os.environ.get('TARGET_FOLDER_ID')
+
+        if not creds_json or folder_id == 'APNE_FOLDER_KI_ID_YAHAN_DAALEIN':
+            print('Error: Credentials ya Folder ID missing hai.')
+            exit(1)
+
+        # 1. Google Authentication
+        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        credentials = Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes)
+        gc = gspread.authorize(credentials)
+
+        # 2. Get Today's Date (Timestamp)
+        ist = pytz.timezone('Asia/Kolkata')
+        today_date = datetime.now(ist).strftime('%d-%b-%Y') # Example: 15-Aug-2026
+        
+        # 3. Create Blank Spreadsheet in Folder
+        try:
+            print(f'Creating blank spreadsheet \"{today_date}\" in folder ID: {folder_id}...')
+            sh = gc.create(today_date, folder_id=folder_id)
+            
+            # Google Sheet by default 'Sheet1' banata hai, usko rename karke 'LTP_Data' kar dete hain 
+            # taaki live market script easily isme data daal sake.
+            ws = sh.worksheet('Sheet1')
+            ws.update_title('LTP_Data')
+                
+            print(f'Success! \"{today_date}\" spreadsheet is ready.')
+        except Exception as e:
+            print(f'Error creating daily sheet: {e}')
+            exit(1)
+        "
