@@ -69,7 +69,7 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
 
-    - name: Seamless Overwrite, SMA Calc & Sync to Target Sheet
+    - name: Zero-Gap Overwrite, SMA Calc & Sync
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
@@ -105,14 +105,12 @@ jobs:
         cols_range = os.environ.get('COLS_RANGE')
         target_id = os.environ.get('TARGET_SPREADSHEET_ID')
 
-        # Reading SMA inputs safely
         try:
             sma_list = [int(os.environ.get(f'SMA_{i}', 0)) for i in range(1, 4)]
             sma_list = [s for s in sma_list if s > 0]
         except:
             sma_list = []
 
-        # Google Sheets column number to letter converter
         def get_col_letter(n):
             result = ''
             while n > 0:
@@ -120,19 +118,15 @@ jobs:
                 result = chr(65 + remainder) + result
             return result
 
-        # 1. Google Authentication
         scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
         gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
 
         try:
             source_sh = gc.open_by_key(source_id)
-            
-            # 2. Fetch Config
             config_sheet = source_sh.worksheet(config_ws_name)
             fetch_period = config_sheet.acell(config_period_cell).value or '1d'
             fetch_interval = config_sheet.acell(config_interval_cell).value or '1d'
 
-            # 3. Fetch Symbols & Columns
             symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
             raw_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
             ticker_list = [sym + '.NS' for sym in raw_symbols]
@@ -140,20 +134,16 @@ jobs:
             col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
             dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
             
-            # Append SMA names to dynamic columns dynamically
             for sma in sma_list:
                 dynamic_columns.append(f'SMA_{sma}')
             
             print(f'Config Setup -> Period: {fetch_period}, Interval: {fetch_interval}')
-            print(f'SMAs to calculate: {sma_list}')
-            print(f'Attempting to fetch data for {len(ticker_list)} symbols...')
         except Exception as e:
             print(f'Error fetching setup data: {e}'); exit(1)
 
         if not ticker_list or not dynamic_columns:
             print('Missing symbols or columns in source. Exiting.'); exit(0)
 
-        # 4. Fetch Historical Data & Calculate SMAs with Gap Fix
         master_df_dict = {}
 
         def fetch_history(ticker):
@@ -162,13 +152,9 @@ jobs:
                 try:
                     df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
                     if not df.empty and 'Close' in df.columns:
-                        
-                        # SUPER-FAST ACCURATE SMA CALCULATION (Forward Fill Fix)
-                        # Yeh missing candles ke gaps ko pichle valid price se bhar dega
-                        filled_close = df['Close'].ffill()
-                        
+                        # FIX 1: min_periods=1 lagaya taaki top ki rows blank na rahein!
                         for sma in sma_list:
-                            df[f'SMA_{sma}'] = filled_close.rolling(window=sma).mean()
+                            df[f'SMA_{sma}'] = df['Close'].rolling(window=sma, min_periods=1).mean()
                             
                         df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
                         return clean_name, df
@@ -193,9 +179,6 @@ jobs:
         if not valid_symbols or not sorted_timestamps:
             print('Yfinance se koi data nahi mila. No updates made.'); exit(0)
 
-        print(f'Successfully fetched and calculated data for {len(valid_symbols)} symbols.')
-
-        # 5. Connect Target Spreadsheet
         try:
             target_sh = gc.open_by_key(target_id)
         except Exception as e:
@@ -203,53 +186,53 @@ jobs:
 
         existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
-        # 6. Build Data Matrix & Seamless Overwrite Tabs
+        # 6. Master Alignment & Zero-Gap Matrix Building
         for col_name in dynamic_columns:
             if col_name not in existing_worksheets:
-                print(f'Creating Tab \"{col_name}\"...')
                 ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(valid_symbols) + 5))
             else:
                 ws = existing_worksheets[col_name]
 
-            # Prepare Data in memory
+            # FIX 2: Saare stocks ka data pehle ek unified master table mein daalna
+            temp_dict = {}
+            for sym in valid_symbols:
+                if col_name in master_df_dict[sym].columns:
+                    temp_dict[sym] = master_df_dict[sym][col_name]
+            
+            if not temp_dict:
+                continue
+                
+            # Unified dataframe banaya aur missing timestamps par FFILL laga diya!
+            df_unified = pd.DataFrame(temp_dict, index=sorted_timestamps)
+            df_unified = df_unified.ffill()
+
             headers = ['Timestamp'] + valid_symbols
             data_matrix = [headers]
-            has_valid_column_data = False
             
             for ts in sorted_timestamps:
                 row = [ts]
                 for sym in valid_symbols:
                     val = ''
-                    if ts in master_df_dict[sym].index and col_name in master_df_dict[sym].columns:
-                        raw_val = master_df_dict[sym].loc[ts, col_name]
-                        # pd.notnull ignores 'NaN' which happens in SMAs without enough data points
+                    if sym in df_unified.columns:
+                        raw_val = df_unified.loc[ts, sym]
                         if pd.notnull(raw_val):
                             val = round(float(raw_val), 2)
-                            has_valid_column_data = True
                     row.append(val)
                 data_matrix.append(row)
 
-            if has_valid_column_data:
+            try:
+                ws.update(values=data_matrix, range_name='A1')
+                new_rows = len(data_matrix)
+                new_cols = len(headers)
+                next_col_letter = get_col_letter(new_cols + 1)
                 try:
-                    # 1. Pehle data seedha A1 par Overwrite karo
-                    ws.update(values=data_matrix, range_name='A1')
-                    
-                    # 2. Purana kachra clear karo (Seamless wipe)
-                    new_rows = len(data_matrix)
-                    new_cols = len(headers)
-                    next_col_letter = get_col_letter(new_cols + 1)
+                    ws.batch_clear([f'A{new_rows + 1}:ZZ10000'])
+                    ws.batch_clear([f'{next_col_letter}1:ZZ{new_rows}'])
+                except:
+                    pass
+                print(f'Tab \"{col_name}\": Seamlessly updated with zero gaps ({new_rows-1} rows).')
+            except Exception as e:
+                print(f'Error updating {col_name}: {e}')
 
-                    try:
-                        ws.batch_clear([f'A{new_rows + 1}:ZZ10000'])
-                        ws.batch_clear([f'{next_col_letter}1:ZZ{new_rows}'])
-                    except:
-                        pass
-                    
-                    print(f'Tab \"{col_name}\": Seamlessly overwritten with {new_rows-1} rows.')
-                except Exception as e:
-                    print(f'Error updating {col_name}: {e}')
-            else:
-                print(f'Tab \"{col_name}\": No sufficient data found (Maybe period too short for this SMA). Skipping.')
-
-        print('Seamless Historical Sync + Accurate SMA Optimization Completed Successfully!')
+        print('Zero-Gap Sync Completed Successfully!')
         "
