@@ -1,29 +1,19 @@
-name: Live Market Multi-Tab Fast Sync
+name: Get YFinance Columns
 
 on:
-  schedule:
-    - cron: '*/15 4-10 * * 1-5'
   workflow_dispatch:
     inputs:
-      source_spreadsheet_id:
-        description: 'PEHLI SHEET ID (Jahan NIFTY200 ke symbols hain)'
+      spreadsheet_id:
+        description: 'PEHLI SHEET ID (Jahan list save karni hai)'
         required: true
         default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-      source_worksheet_name:
-        description: 'Pehli Sheet ke tab ka naam'
+      worksheet_name:
+        description: 'Naye Tab ka naam jahan columns ki list aayegi'
         required: true
-        default: 'NIFTY200'
-      source_column_range:
-        description: 'Symbols kis column/range mein hain?'
-        required: true
-        default: 'C2:C201'
-      target_folder_id:
-        description: 'GOOGLE DRIVE FOLDER ID'
-        required: true
-        default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
+        default: 'YF_Columns'
 
 jobs:
-  fetch_live_data:
+  fetch_columns:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repo
@@ -35,133 +25,94 @@ jobs:
         python-version: '3.10'
 
     - name: Install Dependencies
-      run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
+      run: |
+        pip install gspread google-auth yfinance --disable-pip-version-check
 
-    - name: Fetch Data Once and Update All Tabs Instantly
+    - name: Fetch and Sync YFinance Columns
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
-        SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
-        SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C201' }}
-        TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
+        SPREADSHEET_ID: ${{ github.event.inputs.spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
+        WORKSHEET_NAME: ${{ github.event.inputs.worksheet_name || 'YF_Columns' }}
       run: |
         python3 -c "
-        import os, json, time
+        import os, json
         import gspread
         from google.oauth2.service_account import Credentials
         import yfinance as yf
-        from datetime import datetime
-        import pytz
-        import concurrent.futures
 
         creds_json = os.environ.get('GCP_CREDENTIALS')
-        source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
-        source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
-        source_range = os.environ.get('SOURCE_COLUMN_RANGE')
-        folder_id = os.environ.get('TARGET_FOLDER_ID')
+        spreadsheet_id = os.environ.get('SPREADSHEET_ID')
+        worksheet_name = os.environ.get('WORKSHEET_NAME')
 
-        # 1. Google Authentication
-        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-        gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
-
-        # 2. Fetch Symbols from Source Sheet
-        try:
-            source_sh = gc.open_by_key(source_id)
-            cells = source_sh.worksheet(source_worksheet).get(source_range)
-            ticker_list = [row[0].strip() + '.NS' for row in cells if row and row[0].strip()]
-            clean_symbols = [row[0].strip() for row in cells if row and row[0].strip()]
-            print(f'Successfully fetched {len(ticker_list)} symbols.')
-        except Exception as e:
-            print(f'Error fetching symbols: {e}'); exit(1)
-
-        if not ticker_list:
-            print('No symbols found. Exiting.'); exit(0)
-
-        # 3. FAST FETCH: Saare exact fast_info attributes ki mapping
-        field_mapping = {
-            'currency': 'currency',
-            'dayHigh': 'dayHigh',
-            'dayLow': 'dayLow',
-            'exchange': 'exchange',
-            'fiftyDayAverage': 'fiftyDayAverage',
-            'lastPrice': 'lastPrice',
-            'lastVolume': 'lastVolume',
-            'marketCap': 'marketCap',
-            'open': 'open',
-            'previousClose': 'previousClose',
-            'quoteType': 'quoteType',
-            'regularMarketPreviousClose': 'regularMarketPreviousClose',
-            'shares': 'shares',
-            'tenDayAverageVolume': 'tenDayAverageVolume',
-            'threeMonthAverageVolume': 'threeMonthAverageVolume',
-            'timezone': 'timezone',
-            'twoHundredDayAverage': 'twoHundredDayAverage',
-            'yearChange': 'yearChange',
-            'yearHigh': 'yearHigh',
-            'yearLow': 'yearLow'
-        }
-
-        master_data = {sym: {} for sym in clean_symbols}
-
-        def fetch_all_stock_data(ticker):
-            clean_name = ticker.replace('.NS', '')
-            stock_info = {}
-            for attempt in range(3):
-                try:
-                    fi = yf.Ticker(ticker).fast_info
-                    for tab_title, attr in field_mapping.items():
-                        val = getattr(fi, attr, '')
-                        if isinstance(val, float):
-                            stock_info[tab_title] = round(val, 2)
-                        else:
-                            stock_info[tab_title] = val
-                    return clean_name, stock_info
-                except Exception:
-                    time.sleep(0.3)
-            return clean_name, {k: '' for k in field_mapping.keys()}
-
-        print('Fetching all stock metrics using high-speed multithreading...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
-            futures = [executor.submit(fetch_all_stock_data, t) for t in ticker_list]
-            for future in concurrent.futures.as_completed(futures):
-                name, data = future.result()
-                master_data[name] = data
-
-        # 4. Open Today's Spreadsheet
-        ist = pytz.timezone('Asia/Kolkata')
-        current_dt = datetime.now(ist)
-        today_sheet_name = current_dt.strftime('%d-%b-%Y')
-        fetch_time_str = current_dt.strftime('%Y-%m-%d %H:%M:%S IST')
-
-        try:
-            target_sh = gc.open(today_sheet_name, folder_id=folder_id)
-            worksheets = target_sh.worksheets()
-        except Exception as e:
-            print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
+        if not creds_json:
+            print('Error: GCP_CREDENTIALS secret missing hai.')
             exit(1)
 
-        # 5. Instant Update across all existing tabs
-        for ws in worksheets:
-            tab_name = ws.title
-            if tab_name not in field_mapping:
-                continue 
+        print('Fetching available columns from Yahoo Finance...')
+        
+        # Kisi bhi ek stable stock ka example le rahe hain columns nikalne ke liye
+        stock = yf.Ticker('RELIANCE.NS')
+        
+        # 1. Fast Info columns nikalna
+        try:
+            fast_info_keys = list(stock.fast_info.keys())
+            fast_info_keys.sort()
+        except Exception as e:
+            print(f'Error fetching fast_info: {e}')
+            fast_info_keys = []
 
-            existing_headers = ws.row_values(1)
-            if not existing_headers:
-                existing_headers = ['Fetch Time'] + clean_symbols
-                ws.update(values=[existing_headers], range_name='A1')
+        # 2. Detailed Info columns nikalna (Fundamentals)
+        try:
+            detailed_info_keys = list(stock.info.keys())
+            detailed_info_keys.sort()
+        except Exception as e:
+            print(f'Error fetching detailed info: {e}')
+            detailed_info_keys = []
 
-            row_to_append = [fetch_time_str]
-            for header in existing_headers:
-                if header != 'Fetch Time':
-                    stock_metrics = master_data.get(header, {})
-                    row_to_append.append(stock_metrics.get(tab_name, ''))
+        # Data ko Google Sheets ke format (Rows and Columns) mein set karna
+        max_length = max(len(fast_info_keys), len(detailed_info_keys))
+        
+        data_to_upload = [['Fast Info Attributes (For Live Price)', 'Detailed Info Attributes (For Fundamentals)']]
+        
+        for i in range(max_length):
+            col_a = fast_info_keys[i] if i < len(fast_info_keys) else ''
+            col_b = detailed_info_keys[i] if i < len(detailed_info_keys) else ''
+            data_to_upload.append([col_a, col_b])
 
+        # 3. Authenticate with Google
+        try:
+            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            creds_dict = json.loads(creds_json)
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            gc = gspread.authorize(credentials)
+        except Exception as e:
+            print(f'Authentication Error: {e}')
+            exit(1)
+
+        # 4. Update Google Sheet
+        try:
+            print(f'Connecting to Spreadsheet ID: {spreadsheet_id}')
+            sh = gc.open_by_key(spreadsheet_id)
+            
             try:
-                ws.append_row(row_to_append)
-                print(f'Successfully updated tab: {tab_name}')
-            except Exception as e:
-                print(f'Error updating tab {tab_name}: {e}')
+                worksheet = sh.worksheet(worksheet_name)
+                print(f'Worksheet \"{worksheet_name}\" found. Clearing old list...')
+                worksheet.clear()
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet \"{worksheet_name}\" not found. Creating new...')
+                worksheet = sh.add_worksheet(title=worksheet_name, rows=str(max_length + 10), cols='5')
 
-        print(f'Lightning fast sync completed at {fetch_time_str}!')
+            worksheet.update(data_to_upload, 'A1')
+            
+            # Formatting (Bold Headers)
+            try:
+                worksheet.format('A1:B1', {'textFormat': {'bold': True}})
+            except:
+                pass
+                
+            print(f'Success! Saved {len(fast_info_keys)} fast_info columns and {len(detailed_info_keys)} detailed columns to sheet.')
+            
+        except Exception as e:
+            print(f'Error updating sheet: {e}')
+            exit(1)
         "
