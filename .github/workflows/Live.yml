@@ -1,4 +1,4 @@
-name: Live Market Multi-Tab Fast Sync
+name: Live Market Multi-Tab History Sync
 
 on:
   schedule:
@@ -37,7 +37,7 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Fetch Data Once and Update All Tabs Instantly
+    - name: Fetch Reliable Data via History & Update All Tabs
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
@@ -77,36 +77,36 @@ jobs:
         if not ticker_list:
             print('No symbols found. Exiting.'); exit(0)
 
-        # 3. EXACT & CORRECT FIELD MAPPING (Yahoo Finance fast_info)
+        # 3. FIELD MAPPING (Tab Name -> History DataFrame Column)
         field_mapping = {
-            'dayHigh': 'dayHigh',
-            'dayLow': 'dayLow',
-            'open': 'open',
-            'lastPrice': 'lastPrice',
-            'lastVolume': 'lastVolume',
-            'yearHigh': 'yearHigh',
-            'yearLow': 'yearLow'
+            'open': 'Open',
+            'dayHigh': 'High',
+            'dayLow': 'Low',
+            'lastPrice': 'Close',
+            'volume': 'Volume'
         }
 
         master_data = {sym: {} for sym in clean_symbols}
 
-        def fetch_all_stock_data(ticker):
+        def fetch_stock_history(ticker):
             clean_name = ticker.replace('.NS', '')
             stock_info = {}
             for attempt in range(3):
                 try:
-                    fi = yf.Ticker(ticker).fast_info
-                    for tab_title, attr in field_mapping.items():
-                        val = getattr(fi, attr, '')
-                        stock_info[tab_title] = round(val, 2) if isinstance(val, float) else val
-                    return clean_name, stock_info
+                    df = yf.Ticker(ticker).history(period='1d')
+                    if not df.empty:
+                        row = df.iloc[-1]
+                        for tab_title, col_name in field_mapping.items():
+                            val = row.get(col_name, '')
+                            stock_info[tab_title] = round(float(val), 2) if val != '' else ''
+                        return clean_name, stock_info
                 except Exception:
                     time.sleep(0.3)
             return clean_name, {k: '' for k in field_mapping.keys()}
 
-        print('Fetching all stock metrics using high-speed multithreading...')
+        print('Fetching accurate stock metrics using history API...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
-            futures = [executor.submit(fetch_all_stock_data, t) for t in ticker_list]
+            futures = [executor.submit(fetch_stock_history, t) for t in ticker_list]
             for future in concurrent.futures.as_completed(futures):
                 name, data = future.result()
                 master_data[name] = data
@@ -124,7 +124,7 @@ jobs:
             print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
             exit(1)
 
-        # 5. Instant Update across all existing tabs
+        # 5. Instant Update across all matching tabs
         for ws in worksheets:
             tab_name = ws.title
             if tab_name not in field_mapping:
@@ -147,5 +147,5 @@ jobs:
             except Exception as e:
                 print(f'Error updating tab {tab_name}: {e}')
 
-        print(f'Lightning fast sync completed at {fetch_time_str}!')
+        print(f'Reliable sync completed at {fetch_time_str}!')
         "
