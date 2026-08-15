@@ -40,7 +40,7 @@ on:
       target_spreadsheet_id:
         description: 'DUSRI SHEET ID (Jahan historical data save karna hai)'
         required: true
-        default: 'YAHAN_APNI_TARGET_SHEET_KI_ID_DAALEIN'
+        default: '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM'
 
 jobs:
   fetch_historical_data:
