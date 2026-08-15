@@ -77,15 +77,15 @@ jobs:
         if not ticker_list:
             print('No symbols found. Exiting.'); exit(0)
 
-        # 3. FAST FETCH: Ek hi baar mein saare data points ek sath nikalna
+        # 3. EXACT FIELD MAPPING (Yahoo Finance Fast Info Attributes)
         field_mapping = {
-            'dayHigh': 'day_high',
-            'dayLow': 'day_low',
+            'dayHigh': 'dayHigh',
+            'dayLow': 'dayLow',
             'open': 'open',
-            'last_price': 'last_price',
-            'volume': 'last_volume',
-            'yearHigh': 'year_high',
-            'yearLow': 'year_low'
+            'lastPrice': 'lastPrice',
+            'lastVolume': 'lastVolume',
+            'yearHigh': 'yearHigh',
+            'yearLow': 'yearLow'
         }
 
         master_data = {sym: {} for sym in clean_symbols}
@@ -124,11 +124,11 @@ jobs:
             print(f'Error: Spreadsheet \"{today_sheet_name}\" folder mein nahi mili! {e}')
             exit(1)
 
-        # 5. Instant Update across all existing tabs
+        # 5. Instant Update across all existing tabs matching field_mapping keys
         for ws in worksheets:
             tab_name = ws.title
             if tab_name not in field_mapping:
-                continue # Agar koi faltu tab hai toh skip kar do
+                continue 
 
             existing_headers = ws.row_values(1)
             if not existing_headers:
