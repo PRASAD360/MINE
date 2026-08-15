@@ -57,7 +57,7 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
 
-    - name: Fetch History using Config & Sync to Target Sheet
+    - name: Seamless Overwrite & Sync to Target Sheet
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
         SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
@@ -68,7 +68,7 @@ jobs:
         SYMBOLS_RANGE: ${{ github.event.inputs.symbols_range || 'C2:C201' }}
         COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
         COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
-        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || 'YAHAN_APNI_TARGET_SHEET_KI_ID_DAALEIN' }}
+        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM' }}
       run: |
         python3 -c "
         import os, json, time
@@ -81,18 +81,22 @@ jobs:
 
         creds_json = os.environ.get('GCP_CREDENTIALS')
         source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
-        
         config_ws_name = os.environ.get('CONFIG_WS')
         config_period_cell = os.environ.get('CONFIG_PERIOD_CELL')
         config_interval_cell = os.environ.get('CONFIG_INTERVAL_CELL')
-        
         symbols_ws_name = os.environ.get('SYMBOLS_WS')
         symbols_range = os.environ.get('SYMBOLS_RANGE')
-        
         cols_ws_name = os.environ.get('COLS_WS')
         cols_range = os.environ.get('COLS_RANGE')
-        
         target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+
+        # Google Sheets column number to letter converter
+        def get_col_letter(n):
+            result = ''
+            while n > 0:
+                n, remainder = divmod(n - 1, 26)
+                result = chr(65 + remainder) + result
+            return result
 
         # 1. Google Authentication
         scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
@@ -101,28 +105,28 @@ jobs:
         try:
             source_sh = gc.open_by_key(source_id)
             
-            # 2. Fetch Config (period, interval) using specific cells
+            # 2. Fetch Config
             config_sheet = source_sh.worksheet(config_ws_name)
             fetch_period = config_sheet.acell(config_period_cell).value or '1d'
             fetch_interval = config_sheet.acell(config_interval_cell).value or '1d'
 
-            # 3. Fetch Symbols & Columns with Dynamic Range
+            # 3. Fetch Symbols & Columns
             symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
-            clean_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
-            ticker_list = [sym + '.NS' for sym in clean_symbols]
+            raw_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
+            ticker_list = [sym + '.NS' for sym in raw_symbols]
             
             col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
             dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
             
-            print(f'Config Setup -> Period: {fetch_period} (from {config_period_cell}), Interval: {fetch_interval} (from {config_interval_cell})')
-            print(f'Fetched {len(ticker_list)} symbols and {len(dynamic_columns)} columns.')
+            print(f'Config Setup -> Period: {fetch_period}, Interval: {fetch_interval}')
+            print(f'Attempting to fetch data for {len(ticker_list)} symbols...')
         except Exception as e:
             print(f'Error fetching setup data: {e}'); exit(1)
 
         if not ticker_list or not dynamic_columns:
-            print('Missing data in ranges. Exiting.'); exit(0)
+            print('Missing symbols or columns in source. Exiting.'); exit(0)
 
-        # 4. Fetch Historical Data via Multithreading
+        # 4. Fetch Historical Data
         master_df_dict = {}
 
         def fetch_history(ticker):
@@ -131,14 +135,12 @@ jobs:
                 try:
                     df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
                     if not df.empty:
-                        # Convert timezone aware index to string format for Google Sheets
                         df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
                         return clean_name, df
-                except Exception:
+                except:
                     time.sleep(0.3)
             return clean_name, pd.DataFrame()
 
-        print('Fetching historical data...')
         with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
             futures = [executor.submit(fetch_history, t) for t in ticker_list]
             for future in concurrent.futures.as_completed(futures):
@@ -146,62 +148,74 @@ jobs:
                 if not df.empty:
                     master_df_dict[name] = df
 
-        # Collect all unique timestamps from the fetched data
+        valid_symbols = [sym for sym in raw_symbols if sym in master_df_dict]
+        
         all_timestamps = set()
         for df in master_df_dict.values():
             all_timestamps.update(df.index.tolist())
         sorted_timestamps = sorted(list(all_timestamps))
 
-        if not sorted_timestamps:
-            print('No historical data returned from Yahoo Finance.'); exit(0)
+        if not valid_symbols or not sorted_timestamps:
+            print('Yfinance se koi data nahi mila. No updates made.'); exit(0)
 
-        # 5. Open Target Spreadsheet directly via ID
+        print(f'Successfully fetched data for {len(valid_symbols)} symbols.')
+
+        # 5. Connect Target Spreadsheet
         try:
             target_sh = gc.open_by_key(target_id)
         except Exception as e:
-            print(f'Error: Target Spreadsheet ID galat hai ya access nahi hai! {e}'); exit(1)
+            print(f'Error Target Spreadsheet: {e}'); exit(1)
 
         existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
-        # 6. Process and Append Data to Tabs
+        # 6. Build Data Matrix & Seamless Overwrite Tabs
         for col_name in dynamic_columns:
             if col_name not in existing_worksheets:
-                print(f'Tab \"{col_name}\" creating...')
-                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(clean_symbols) + 5))
+                print(f'Creating Tab \"{col_name}\"...')
+                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(valid_symbols) + 5))
             else:
                 ws = existing_worksheets[col_name]
 
-            # Setup Headers
-            existing_headers = ws.row_values(1)
-            if not existing_headers:
-                existing_headers = ['Timestamp'] + clean_symbols
-                ws.update(values=[existing_headers], range_name='A1')
+            # Prepare Data in memory
+            headers = ['Timestamp'] + valid_symbols
+            data_matrix = [headers]
+            has_valid_column_data = False
             
-            # Fetch existing timestamps to avoid duplicates
-            existing_timestamps = ws.col_values(1)[1:] # Skip header
-            existing_timestamps_set = set(existing_timestamps)
-
-            rows_to_append = []
             for ts in sorted_timestamps:
-                if ts not in existing_timestamps_set:
-                    row = [ts]
-                    for header in existing_headers:
-                        if header != 'Timestamp':
-                            val = ''
-                            if header in master_df_dict and ts in master_df_dict[header].index and col_name in master_df_dict[header].columns:
-                                raw_val = master_df_dict[header].loc[ts, col_name]
-                                val = round(float(raw_val), 2) if pd.notnull(raw_val) else ''
-                            row.append(val)
-                    rows_to_append.append(row)
+                row = [ts]
+                for sym in valid_symbols:
+                    val = ''
+                    if ts in master_df_dict[sym].index and col_name in master_df_dict[sym].columns:
+                        raw_val = master_df_dict[sym].loc[ts, col_name]
+                        if pd.notnull(raw_val):
+                            val = round(float(raw_val), 2)
+                            has_valid_column_data = True
+                    row.append(val)
+                data_matrix.append(row)
 
-            if rows_to_append:
+            if has_valid_column_data:
                 try:
-                    ws.append_rows(rows_to_append)
-                    print(f'Tab \"{col_name}\": Added {len(rows_to_append)} new historical rows.')
+                    # 1. Pehle data seedha A1 par Overwrite karo (No flicker, No blanking!)
+                    ws.update(values=data_matrix, range_name='A1')
+                    
+                    # 2. Ab purana kachra clear karo jo limits ke bahar bach gaya ho
+                    new_rows = len(data_matrix)
+                    new_cols = len(headers)
+                    next_col_letter = get_col_letter(new_cols + 1)
+
+                    try:
+                        # Clear leftover rows at the bottom
+                        ws.batch_clear([f'A{new_rows + 1}:ZZ10000'])
+                        # Clear leftover columns at the right (if symbols were removed)
+                        ws.batch_clear([f'{next_col_letter}1:ZZ{new_rows}'])
+                    except:
+                        pass # Ignore errors if bounds are already clean
+                    
+                    print(f'Tab \"{col_name}\": Seamlessly overwritten with {new_rows-1} rows of data.')
                 except Exception as e:
                     print(f'Error updating {col_name}: {e}')
             else:
-                print(f'Tab \"{col_name}\": No new rows to add (Data already up to date).')
+                print(f'Tab \"{col_name}\": No valid data found for this metric. Skipping tab update.')
 
-        print('Historical Sync Completed Successfully!')
+        print('Seamless Historical Sync Completed Successfully!')
         "
