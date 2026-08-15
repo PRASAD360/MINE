@@ -1,0 +1,164 @@
+name: Live Market Time-Series Sync
+
+on:
+  schedule:
+    # Indian Market time: 9:30 AM to 3:30 PM (Mon-Fri)
+    - cron: '*/15 4-10 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      source_spreadsheet_id:
+        description: 'PEHLI SHEET ID (Jahan NIFTY200 ke symbols hain)'
+        required: true
+        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+      source_worksheet_name:
+        description: 'Pehli Sheet ke tab ka naam'
+        required: true
+        default: 'NIFTY200'
+      source_column_range:
+        description: 'Symbols kis column/range mein hain? (e.g., C2:C)'
+        required: true
+        default: 'C2:C'
+      target_spreadsheet_id:
+        description: 'DUSRI SHEET ID (Jahan live data save karna hai)'
+        required: true
+        default: 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN'
+      target_worksheet_name:
+        description: 'Dusri Sheet ke tab ka naam (e.g., LTP_History)'
+        required: true
+        default: 'LTP_History'
+      data_point_to_fetch:
+        description: 'Konsa data fetch karna hai? (e.g., last_price, open, day_high, day_low)'
+        required: true
+        default: 'last_price'
+
+jobs:
+  fetch_live_data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        pip install gspread google-auth yfinance pytz --disable-pip-version-check
+
+    - name: Fetch Live Data & Append to Google Sheet
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+        SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
+        SOURCE_WORKSHEET_NAME: ${{ github.event.inputs.source_worksheet_name || 'NIFTY200' }}
+        SOURCE_COLUMN_RANGE: ${{ github.event.inputs.source_column_range || 'C2:C' }}
+        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN' }}
+        TARGET_WORKSHEET_NAME: ${{ github.event.inputs.target_worksheet_name || 'LTP_History' }}
+        DATA_POINT: ${{ github.event.inputs.data_point_to_fetch || 'last_price' }}
+      run: |
+        python3 -c "
+        import os, json, time
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import yfinance as yf
+        from datetime import datetime
+        import pytz
+
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
+        source_worksheet = os.environ.get('SOURCE_WORKSHEET_NAME')
+        source_range = os.environ.get('SOURCE_COLUMN_RANGE')
+        target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+        target_worksheet = os.environ.get('TARGET_WORKSHEET_NAME')
+        data_point = os.environ.get('DATA_POINT')
+
+        if not creds_json or target_id == 'DUSRI_SHEET_KI_ID_YAHAN_DAALEIN':
+            print('Error: Credentials ya Target Spreadsheet ID missing hai.')
+            exit(1)
+
+        # 1. Authenticate with Google
+        try:
+            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            creds_dict = json.loads(creds_json)
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            gc = gspread.authorize(credentials)
+        except Exception as e:
+            print(f'Authentication Error: {e}')
+            exit(1)
+
+        # 2. Fetch Symbols from Source Sheet using the Range
+        print(f'Connecting to Source Spreadsheet to fetch symbols from range {source_range}...')
+        try:
+            source_sh = gc.open_by_key(source_id)
+            source_ws = source_sh.worksheet(source_worksheet)
+            
+            # Fetching data specific to the provided range
+            cells = source_ws.get(source_range)
+            
+            ticker_list = []
+            clean_symbols = []
+            
+            for row in cells:
+                # Ensuring the row is not empty and has a value
+                if row and row[0].strip():
+                    val = row[0].strip()
+                    clean_symbols.append(val)
+                    ticker_list.append(val + '.NS')
+            
+            print(f'Successfully fetched {len(ticker_list)} symbols.')
+        except Exception as e:
+            print(f'Error fetching symbols: {e}')
+            exit(1)
+
+        # 3. Setup Timestamps
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist)
+        fetch_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S IST')
+        
+        exchange_time_str = current_time.strftime('%Y-%m-%d %H:%M:%S') 
+        
+        row_data = [fetch_time_str, exchange_time_str]
+
+        # 4. Fetch Live Data for the specific data_point
+        print(f'Fetching {data_point} for all symbols...')
+        for ticker in ticker_list:
+            try:
+                stock = yf.Ticker(ticker)
+                val = getattr(stock.fast_info, data_point)
+                if isinstance(val, float):
+                    val = round(val, 2)
+                row_data.append(val)
+                print(f'{ticker}: {val}')
+            except Exception as e:
+                print(f'Warning: Failed for {ticker}')
+                row_data.append('N/A')
+            
+            time.sleep(0.1)
+
+        # 5. Append to Target Google Sheet
+        try:
+            target_sh = gc.open_by_key(target_id)
+            
+            # Check if worksheet exists
+            try:
+                target_ws = target_sh.worksheet(target_worksheet)
+                # Check if headers are present
+                first_row = target_ws.row_values(1)
+                if not first_row:
+                    headers = ['Fetch Time', 'Exchange Time'] + clean_symbols
+                    target_ws.append_row(headers)
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet not found. Creating new...')
+                target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 2))
+                headers = ['Fetch Time', 'Exchange Time'] + clean_symbols
+                target_ws.append_row(headers)
+
+            print('Appending new row to sheet...')
+            target_ws.append_row(row_data)
+            print(f'Success! Data appended at {fetch_time_str}')
+            
+        except Exception as e:
+            print(f'Error updating target sheet: {e}')
+            exit(1)
+        "
