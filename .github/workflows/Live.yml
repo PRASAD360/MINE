@@ -58,7 +58,7 @@ jobs:
         DATA_POINT: ${{ github.event.inputs.data_point_to_fetch || 'last_price' }}
       run: |
         python3 -c "
-        import os, json
+        import os, json, time
         import gspread
         from google.oauth2.service_account import Credentials
         import yfinance as yf
@@ -78,82 +78,103 @@ jobs:
             print('Error: Credentials ya Target Spreadsheet ID missing hai.')
             exit(1)
 
-        # 1. Authenticate with Google
+        # 1. Google Authentication
         try:
             scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
             creds_dict = json.loads(creds_json)
             credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
             gc = gspread.authorize(credentials)
         except Exception as e:
-            print(f'Authentication Error: {e}')
-            exit(1)
+            print(f'Authentication Error: {e}'); exit(1)
 
-        # 2. Fetch Symbols
+        # 2. Fetch Symbols from Source
         print(f'Connecting to Source Spreadsheet range {source_range}...')
         try:
             source_sh = gc.open_by_key(source_id)
-            source_ws = source_sh.worksheet(source_worksheet)
-            cells = source_ws.get(source_range)
+            cells = source_sh.worksheet(source_worksheet).get(source_range)
             
-            ticker_list = []
             clean_symbols = []
+            ticker_list = []
             for row in cells:
                 if row and row[0].strip():
-                    val = row[0].strip()
-                    clean_symbols.append(val)
-                    ticker_list.append(val + '.NS')
-            print(f'Successfully fetched {len(ticker_list)} symbols.')
+                    sym = row[0].strip()
+                    clean_symbols.append(sym)
+                    ticker_list.append(sym + '.NS')
+            print(f'Successfully fetched {len(clean_symbols)} symbols.')
         except Exception as e:
-            print(f'Error fetching symbols: {e}')
-            exit(1)
+            print(f'Error fetching symbols: {e}'); exit(1)
 
-        if not ticker_list:
-            print('No symbols found. Exiting.')
-            exit(0)
+        if not clean_symbols:
+            print('No symbols found. Exiting.'); exit(0)
 
-        # 3. Setup Timestamp (Only Fetch Time)
-        ist = pytz.timezone('Asia/Kolkata')
-        fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
-
-        # 4. Multithreading Function (Parallel Processing)
+        # 3. Yfinance Data Fetch (Ultra-Fast with 3 Retries for Zero Error)
         results_dict = {}
         def fetch_stock_data(ticker):
-            try:
-                val = getattr(yf.Ticker(ticker).fast_info, data_point)
-                return ticker, round(val, 2) if isinstance(val, float) else val
-            except Exception:
-                return ticker, 'N/A'
+            clean_name = ticker.replace('.NS', '')
+            for attempt in range(3):  # Retry logic
+                try:
+                    val = getattr(yf.Ticker(ticker).fast_info, data_point)
+                    return clean_name, round(val, 2) if isinstance(val, float) else val
+                except Exception:
+                    time.sleep(0.5) # Wait before retry
+            return clean_name, '' # Agar 3 baar me bhi fail ho, to blank chhod do
 
         print(f'Fetching {data_point} for {len(ticker_list)} stocks using Multithreading...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
             futures = [executor.submit(fetch_stock_data, t) for t in ticker_list]
             for future in concurrent.futures.as_completed(futures):
                 t, v = future.result()
                 results_dict[t] = v
 
-        # Row Build Karna: [Fetch Time, RELIANCE, TCS, INFY...]
-        row_data = [fetch_time_str]
-        for ticker in ticker_list:
-            row_data.append(results_dict.get(ticker, 'N/A'))
+        # 4. Target Sheet Logic (Smart Mapping)
+        ist = pytz.timezone('Asia/Kolkata')
+        fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
 
-        # 5. Append to Google Sheet
+        target_sh = gc.open_by_key(target_id)
         try:
-            target_sh = gc.open_by_key(target_id)
-            try:
-                target_ws = target_sh.worksheet(target_worksheet)
-                first_row = target_ws.row_values(1)
-                if not first_row:
-                    target_ws.append_row(['Fetch Time'] + clean_symbols)
-            except gspread.exceptions.WorksheetNotFound:
-                print('Worksheet not found. Creating new...')
-                target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 1))
-                target_ws.append_row(['Fetch Time'] + clean_symbols)
+            target_ws = target_sh.worksheet(target_worksheet)
+        except gspread.exceptions.WorksheetNotFound:
+            target_ws = target_sh.add_worksheet(title=target_worksheet, rows='1000', cols=str(len(clean_symbols) + 1))
 
-            print('Appending data to sheet...')
-            target_ws.append_row(row_data)
-            print(f'Success! Data appended rapidly at {fetch_time_str}')
+        # Get existing headers from Row 1
+        existing_headers = target_ws.row_values(1)
+
+        # Agar sheet nayi hai, to headers lagao
+        if not existing_headers:
+            existing_headers = ['Fetch Time'] + clean_symbols
+            target_ws.append_row(existing_headers)
+        else:
+            # Agar purani sheet hai aur NIFTY200 me koi naya stock add hua hai, to header list me update karo
+            new_cols = [s for s in clean_symbols if s not in existing_headers]
+            if new_cols:
+                existing_headers.extend(new_cols)
+                # Google Sheet ki Row 1 ko update karna bina error ke
+                cell_list = target_ws.range(1, 1, 1, len(existing_headers))
+                for i, val in enumerate(existing_headers):
+                    cell_list[i].value = val
+                target_ws.update_cells(cell_list)
+
+        # Exact Header ke hisab se data arrange karna (Apni apni column me)
+        row_to_append = []
+        for header in existing_headers:
+            if header == 'Fetch Time':
+                row_to_append.append(fetch_time_str)
+            else:
+                row_to_append.append(results_dict.get(header, '')) # Agar koi purana stock NIFTY200 se nikal gaya hai, to uski column blank rahegi
+
+        # 5. Append and Clean (Resize)
+        try:
+            print('Appending mapped data to sheet...')
+            target_ws.append_row(row_to_append)
             
+            # Jo column faltu hain unko clear (delete) karna
+            current_cols = target_ws.col_count
+            needed_cols = len(existing_headers)
+            if current_cols > needed_cols:
+                print(f'Clearing {current_cols - needed_cols} extra blank columns...')
+                target_ws.resize(cols=needed_cols)
+                
+            print(f'Success! Data appended perfectly at {fetch_time_str}')
         except Exception as e:
-            print(f'Error updating target sheet: {e}')
-            exit(1)
+            print(f'Error updating target sheet: {e}'); exit(1)
         "
