@@ -16,11 +16,11 @@ on:
       config_period_cell:
         description: 'Period ki value kis cell mein hai? (e.g., A1)'
         required: true
-        default: 'A1'
+        default: 'C1'
       config_interval_cell:
         description: 'Interval ki value kis cell mein hai? (e.g., A2)'
         required: true
-        default: 'A2'
+        default: 'C2'
       symbols_worksheet_name:
         description: 'Symbols wale tab ka naam'
         required: true
