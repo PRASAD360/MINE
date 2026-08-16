@@ -1,4 +1,4 @@
-name: Dynamic Historical Data Sync (Bulletproof)
+name: Dynamic Historical 1m_2d (Bulletproof)
 
 on:
   schedule:
