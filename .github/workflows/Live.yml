@@ -1,4 +1,4 @@
-Name: Live Market Dynamic Multi-Tab Sync
+name: Live Market Dynamic Multi-Tab Sync
 
 on:
   schedule:
