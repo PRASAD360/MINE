@@ -12,7 +12,7 @@ env:
   SYMBOLS_RANGE: 'C2:C201'
   COLS_WS: 'Fetch_Columns'
   COLS_RANGE: 'A1:A10'
-  TARGET_SPREADSHEET_ID: '1234567890abcdefghijklmnopqrstuvwxyz' # <--- Yahan apni Target Sheet ID dalein
+  TARGET_SPREADSHEET_ID: '1qN0dejA9E64BzvG1cCizBgXMWu8OWd0-_vHMhNyAMLU' # <--- Yahan apni Target Sheet ID dalein
 
 jobs:
   fetch_live_data:
