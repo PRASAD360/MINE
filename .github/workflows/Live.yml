@@ -3,32 +3,16 @@ name: Live Market Dynamic Multi-Tab Sync
 on:
   schedule:
     - cron: '*/15 4-10 * * 1-5'
-  workflow_dispatch:
-    inputs:
-      source_spreadsheet_id:
-        description: 'PEHLI SHEET ID (Jahan Symbols aur Column Names hain)'
-        required: true
-        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-      symbols_worksheet_name:
-        description: 'Symbols wale tab ka naam'
-        required: true
-        default: 'NIFTY200'
-      symbols_column_range:
-        description: 'Symbols kis range mein hain?'
-        required: true
-        default: 'C2:C201'
-      columns_worksheet_name:
-        description: 'Column names wale tab ka naam'
-        required: true
-        default: 'Fetch_Columns'
-      columns_range:
-        description: 'Column names kis range mein hain?'
-        required: true
-        default: 'A1:A10'
-      target_folder_id:
-        description: 'GOOGLE DRIVE FOLDER ID'
-        required: true
-        default: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
+  workflow_dispatch:  # Bina kisi input ke direct manual run karne ke liye
+
+# --- YAHAN SE AAP APNI SAARI CONFIGURATIONS EASILY MODIFY KAR SAKTE HAIN ---
+env:
+  SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+  SYMBOLS_WS: 'NIFTY200'
+  SYMBOLS_RANGE: 'C2:C201'
+  COLS_WS: 'Fetch_Columns'
+  COLS_RANGE: 'A1:A10'
+  TARGET_FOLDER_ID: '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR'
 
 jobs:
   fetch_live_data:
@@ -38,7 +22,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v4   # <--- YAHAN GALTI THI, ISE THEEK KAR DIYA HAI
+      uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
@@ -48,12 +32,6 @@ jobs:
     - name: Smart Dynamic Sync with Auto-Tab Creation
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
-        SYMBOLS_WS: ${{ github.event.inputs.symbols_worksheet_name || 'NIFTY200' }}
-        SYMBOLS_RANGE: ${{ github.event.inputs.symbols_column_range || 'C2:C201' }}
-        COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
-        COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
-        TARGET_FOLDER_ID: ${{ github.event.inputs.target_folder_id || '1po3JuCEpA95UgWJ1L2t-SOxCBxJvaRmR' }}
       run: |
         python3 -c "
         import os, json, time
@@ -107,7 +85,6 @@ jobs:
                     if not df.empty:
                         row = df.iloc[-1]
                         for col_name in dynamic_columns:
-                            # DataFrame se exact value nikalna (agar column exist karta ho)
                             val = row.get(col_name, '')
                             stock_info[col_name] = round(float(val), 2) if val != '' and val is not None else ''
                         return clean_name, stock_info
