@@ -28,7 +28,7 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Config2 Multi-Target Sheet Sync
+    - name: Config2 Multi-Target Sheet Sync & Rename
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       run: |
@@ -58,29 +58,26 @@ jobs:
             # 2. Read Config2 (Target IDs in Col A, Symbols in Col B)
             config_cells = source_sh.worksheet(config_ws_name).get(config_range)
             
-            target_to_symbols = {}
+            target_configs = []
             all_symbols_set = set()
             
             for row in config_cells:
                 if len(row) >= 2:
                     target_id = row[0].strip()
                     symbol = row[1].strip()
-                    # Check: Jiska dono value available ho
                     if target_id and symbol:
-                        if target_id not in target_to_symbols:
-                            target_to_symbols[target_id] = []
-                        target_to_symbols[target_id].append(symbol)
+                        target_configs.append({'target_id': target_id, 'symbol': symbol})
                         all_symbols_set.add(symbol)
             
             # 3. Fetch Dynamic Column Names from Sheet
             col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
             dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
             
-            print(f'Total Target Sheets: {len(target_to_symbols)}, Unique Symbols: {len(all_symbols_set)}, Columns: {len(dynamic_columns)}')
+            print(f'Total Target Sheets: {len(target_configs)}, Unique Symbols: {len(all_symbols_set)}, Columns: {len(dynamic_columns)}')
         except Exception as e:
             print(f'Error reading config data from source sheet: {e}'); exit(1)
 
-        if not target_to_symbols or not dynamic_columns:
+        if not target_configs or not dynamic_columns:
             print('No valid target IDs, symbols, or columns found. Exiting.'); exit(0)
 
         # 4. Fetch History Data via Multithreading (for all unique symbols)
@@ -114,40 +111,47 @@ jobs:
         current_dt = datetime.now(ist)
         fetch_time_str = current_dt.strftime('%Y-%m-%d %H:%M:%S IST')
 
-        # 6. Iterate through each Target Spreadsheet and Update Tabs
-        for target_id, symbols in target_to_symbols.items():
+        # 6. Iterate through each Target Spreadsheet, Rename (if needed), and Update Tabs
+        for config in target_configs:
+            target_id = config['target_id']
+            symbol = config['symbol']
+            
             try:
                 target_sh = gc.open_by_key(target_id)
+                
+                # Check and set spreadsheet title to the symbol if not already matching
+                if target_sh.title != symbol:
+                    target_sh.update_title(symbol)
+                    print(f'Renamed spreadsheet ID {target_id} to title: {symbol}')
             except Exception as e:
-                print(f'Error opening target spreadsheet ID {target_id}: {e}')
+                print(f'Error opening or renaming target spreadsheet ID {target_id}: {e}')
                 continue
 
             existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
             for col_name in dynamic_columns:
                 if col_name not in existing_worksheets:
-                    print(f'Tab \"{col_name}\" target sheet {target_id} me nahi mila. Create kiya ja raha hai...')
-                    ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(symbols) + 5))
+                    print(f'Tab \"{col_name}\" target sheet ({symbol}) me nahi mila. Create kiya ja raha hai...')
+                    ws = target_sh.add_worksheet(title=col_name, rows='1000', cols='5')
                 else:
                     ws = existing_worksheets[col_name]
 
-                # Headers check & update (Fetch Time + specific symbols for this target sheet)
+                # Headers check & update
                 existing_headers = ws.row_values(1)
-                expected_headers = ['Fetch Time'] + symbols
+                expected_headers = ['Fetch Time', symbol]
                 if not existing_headers or existing_headers != expected_headers:
                     ws.update(values=[expected_headers], range_name='A1')
 
-                # Row data taiyar karna
-                row_to_append = [fetch_time_str]
-                for sym in symbols:
-                    stock_metrics = master_data.get(sym, {})
-                    row_to_append.append(stock_metrics.get(col_name, ''))
+                # Row data for this symbol
+                stock_metrics = master_data.get(symbol, {})
+                val_to_insert = stock_metrics.get(col_name, '')
+                row_to_append = [fetch_time_str, val_to_insert]
 
                 try:
                     ws.append_row(row_to_append)
-                    print(f'Successfully updated target {target_id} -> Tab: {col_name}')
+                    print(f'Successfully updated target [{symbol}] -> Tab: {col_name}')
                 except Exception as e:
-                    print(f'Error updating target {target_id} tab {col_name}: {e}')
+                    print(f'Error updating target [{symbol}] tab {col_name}: {e}')
 
-        print(f'Multi-target dynamic sync completed successfully at {fetch_time_str}!')
+        print(f'Multi-target dynamic sync and rename completed successfully at {fetch_time_str}!')
         "
