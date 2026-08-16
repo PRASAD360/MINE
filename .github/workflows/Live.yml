@@ -1,23 +1,21 @@
-name: Dynamic Historical Data Sync (Bulletproof)
+name: Live Market Dynamic Multi-Tab Sync
 
 on:
   schedule:
     - cron: '*/15 4-10 * * 1-5'
   workflow_dispatch:
 
+# --- CONFIGURATIONS SECTION ---
 env:
   SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-  CONFIG_WS: 'Config'
-  CONFIG_PERIOD_CELL: 'C1'
-  CONFIG_INTERVAL_CELL: 'C2'
   SYMBOLS_WS: 'NIFTY200'
   SYMBOLS_RANGE: 'C2:C201'
   COLS_WS: 'Fetch_Columns'
   COLS_RANGE: 'A1:A10'
-  TARGET_SPREADSHEET_ID: '1pCrEf9oCQg2c4lWpRgS3ejx8Aqa5xCnjp4K_ii3Q0IA'
+  TARGET_SPREADSHEET_ID: '1234567890abcdefghijklmnopqrstuvwxyz' # <--- Yahan apni Target Sheet ID dalein
 
 jobs:
-  fetch_historical_data:
+  fetch_live_data:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repo
@@ -29,109 +27,88 @@ jobs:
         python-version: '3.10'
 
     - name: Install Dependencies
-      run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
+      run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Bulletproof Historical Data Sync
+    - name: Smart Dynamic Sync to Single Target Sheet
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       run: |
         python3 -c "
-        import os, json, time, gspread
+        import os, json, time
+        import gspread
         from google.oauth2.service_account import Credentials
         import yfinance as yf
-        import pandas as pd
+        from datetime import datetime
+        import pytz
         import concurrent.futures
 
-        # 1. Setup & Credentials
-        creds = Credentials.from_service_account_info(
-            json.loads(os.environ['GCP_CREDENTIALS']), 
-            scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-        )
-        gc = gspread.authorize(creds)
-        
-        source_sh = gc.open_by_key(os.environ['SOURCE_SPREADSHEET_ID'])
-        cfg = source_sh.worksheet(os.environ['CONFIG_WS'])
-        period = cfg.acell(os.environ['CONFIG_PERIOD_CELL']).value or '1mo'
-        interval = cfg.acell(os.environ['CONFIG_INTERVAL_CELL']).value or '1d'
-        
-        raw_symbols = [r[0].strip() for r in source_sh.worksheet(os.environ['SYMBOLS_WS']).get(os.environ['SYMBOLS_RANGE']) if r and r[0].strip()]
-        cols = [r[0].strip() for r in source_sh.worksheet(os.environ['COLS_WS']).get(os.environ['COLS_RANGE']) if r and r[0].strip()]
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
+        target_id = os.environ.get('TARGET_SPREADSHEET_ID')
+        symbols_ws_name = os.environ.get('SYMBOLS_WS')
+        symbols_range = os.environ.get('SYMBOLS_RANGE')
+        cols_ws_name = os.environ.get('COLS_WS')
+        cols_range = os.environ.get('COLS_RANGE')
 
-        # 2. Fetch Data with Smart Ticker Formatting
-        master_dfs = {}
-        def fetch(sym):
+        # 1. Google Authentication
+        scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
+
+        try:
+            source_sh = gc.open_by_key(source_id)
+            
+            # 2. Fetch Symbols
+            symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
+            ticker_list = [row[0].strip() + '.NS' for row in symbol_cells if row and row[0].strip()]
+            clean_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
+            
+            # 3. Fetch Dynamic Column Names
+            col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
+            dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
+            
+            print(f'Symbols: {len(clean_symbols)}, Columns: {len(dynamic_columns)}')
+        except Exception as e:
+            print(f'Error fetching setup data: {e}'); exit(1)
+
+        # 4. Fetch Data
+        master_data = {sym: {} for sym in clean_symbols}
+        def fetch_stock_history(ticker):
+            clean_name = ticker.replace('.NS', '')
             try:
-                # Suffix logic: Agar pehle se extension hai toh wahi rakho, warna .NS jodo
-                ticker = sym if any(sym.endswith(ext) for ext in ['.NS', '.BO']) or sym.startswith('^') else sym + '.NS'
-                df = yf.Ticker(ticker).history(period=period, interval=interval)
+                df = yf.Ticker(ticker).history(period='1d')
                 if not df.empty:
-                    df.index = df.index.strftime('%Y-%m-%d %H:%M:%S' if ':' in str(df.index[0]) else '%Y-%m-%d')
-                    return sym, df
-            except Exception as e:
-                print(f'Error fetching {sym}: {e}')
-            return sym, None
+                    row = df.iloc[-1]
+                    return clean_name, {col: round(float(row.get(col, 0)), 2) for col in dynamic_columns}
+            except: pass
+            return clean_name, {col: '' for col in dynamic_columns}
 
-        print(f'Fetching data for {len(raw_symbols)} symbols (Period: {period}, Interval: {interval})...')
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            futures = {executor.submit(fetch, s): s for s in raw_symbols}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+            futures = [executor.submit(fetch_stock_history, t) for t in ticker_list]
             for f in concurrent.futures.as_completed(futures):
-                sym, df = f.result()
-                if df is not None: 
-                    master_dfs[sym] = df
+                name, data = f.result()
+                master_data[name] = data
 
-        if not master_dfs:
-            print('Error: Yfinance se ek bhi symbol ka data nahi mila!')
-            exit(1)
+        # 5. Open Target Sheet
+        ist = pytz.timezone('Asia/Kolkata')
+        fetch_time_str = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S')
+        target_sh = gc.open_by_key(target_id)
+        existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
-        # 3. Process & Write Data Safely
-        target_sh = gc.open_by_key(os.environ['TARGET_SPREADSHEET_ID'])
-        existing = {ws.title: ws for ws in target_sh.worksheets()}
-
-        all_dates = sorted(list(set().union(*[df.index for df in master_dfs.values()])))
-        valid_symbols = [s for s in raw_symbols if s in master_dfs]
-
-        for col in cols:
-            rows_data = [['Timestamp'] + valid_symbols]
-            
-            for ts in all_dates:
-                row = [ts]
-                for sym in valid_symbols:
-                    val = ''
-                    df = master_dfs[sym]
-                    if col in df.columns and ts in df.index:
-                        raw_val = df.at[ts, col]
-                        if not pd.isna(raw_val):
-                            try:
-                                val = round(float(raw_val), 2)
-                            except:
-                                val = str(raw_val)
-                    row.append(val)
-                rows_data.append(row)
-
-            # Dynamic Worksheet creation with safe row count
-            needed_rows = len(rows_data) + 50
-            needed_cols = len(valid_symbols) + 2
-            
-            if col in existing:
-                ws = existing[col]
-                # Ensure sheet has enough rows/cols to avoid out-of-bound errors
-                if ws.row_count < needed_rows:
-                    ws.add_rows(needed_rows - ws.row_count)
+        # 6. Update Tabs
+        for col_name in dynamic_columns:
+            if col_name not in existing_worksheets:
+                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(clean_symbols) + 5))
             else:
-                ws = target_sh.add_worksheet(title=col, rows=str(max(2000, needed_rows)), cols=str(needed_cols))
-                existing[col] = ws
+                ws = existing_worksheets[col_name]
 
-            ws.clear()
-            time.sleep(0.3)
-            
-            # Safe Chunking for wide tables (300 rows per batch to prevent Google API Payload Error)
-            chunk_size = 300
-            for i in range(0, len(rows_data), chunk_size):
-                chunk = rows_data[i:i + chunk_size]
-                ws.update(values=chunk, range_name=f'A{i+1}')
-                time.sleep(0.4)
-                
-            print(f'Successfully synced Tab: {col} ({len(all_dates)} rows)')
+            # Header check
+            if not ws.row_values(1):
+                ws.update(values=[['Fetch Time'] + clean_symbols], range_name='A1')
 
-        print('All Historical Data Synced Successfully with Zero Errors!')
+            # Append data
+            row_to_append = [fetch_time_str] + [master_data.get(sym, {}).get(col_name, '') for sym in clean_symbols]
+            ws.append_row(row_to_append)
+            print(f'Updated tab: {col_name}')
+
+        print('Sync completed!')
         "
