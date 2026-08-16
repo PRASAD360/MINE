@@ -1,4 +1,4 @@
-name: Live Market Dynamic Multi-Tab Sync
+Name: Live Market Dynamic Multi-Tab Sync
 
 on:
   schedule:
@@ -12,7 +12,7 @@ env:
   SYMBOLS_RANGE: 'A2:A201'
   COLS_WS: 'Fetch_Columns'
   COLS_RANGE: 'A1:A10'
-  TARGET_SPREADSHEET_ID: '1qN0dejA9E64BzvG1cCizBgXMWu8OWd0-_vHMhNyAMLU' # <--- Yahan apni Target Sheet ID dalein
+  TARGET_SPREADSHEET_ID: '1qN0dejA9E64BzvG1cCizBgXMWu8OWd0-_vHMhNyAMLU'
 
 jobs:
   fetch_live_data:
@@ -29,7 +29,7 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pytz --disable-pip-version-check
 
-    - name: Smart Dynamic Sync to Single Target Sheet
+    - name: Smart Dynamic Sync with Header Mapping
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       run: |
@@ -94,21 +94,34 @@ jobs:
         target_sh = gc.open_by_key(target_id)
         existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
 
-        # 6. Update Tabs
+        # 6. Update Tabs with Dynamic Header Mapping
         for col_name in dynamic_columns:
             if col_name not in existing_worksheets:
                 ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(clean_symbols) + 5))
             else:
                 ws = existing_worksheets[col_name]
 
-            # Header check
-            if not ws.row_values(1):
-                ws.update(values=[['Fetch Time'] + clean_symbols], range_name='A1')
+            # Header check: Agar pehli baar hai toh naye symbols dalo
+            existing_headers = ws.row_values(1)
+            expected_headers = ['Fetch Time'] + clean_symbols
+            
+            if not existing_headers:
+                ws.update(values=[expected_headers], range_name='A1')
+                existing_headers = expected_headers
+            elif existing_headers != expected_headers:
+                # Agar Config2 mein symbols ka kram badla hai, toh sheet ke headers ko bhi update kar do
+                ws.update(values=[expected_headers], range_name='A1')
+                existing_headers = expected_headers
 
-            # Append data
-            row_to_append = [fetch_time_str] + [master_data.get(sym, {}).get(col_name, '') for sym in clean_symbols]
+            # Mapping logic: Sheet ke header ke anusaar hi data ka kram banega
+            row_to_append = [fetch_time_str]
+            for header in existing_headers:
+                if header != 'Fetch Time':
+                    stock_metrics = master_data.get(header, {})
+                    row_to_append.append(stock_metrics.get(col_name, ''))
+
             ws.append_row(row_to_append)
-            print(f'Updated tab: {col_name}')
+            print(f'Updated tab: {col_name} (Mapped with headers)')
 
-        print('Sync completed!')
+        print('Sync completed successfully!')
         "
