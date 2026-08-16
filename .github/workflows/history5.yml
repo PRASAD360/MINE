@@ -1,58 +1,21 @@
-name: Dynamic Historical Multi-Tab Sync
+name: Dynamic Historical Data Sync
 
 on:
   schedule:
     - cron: '*/15 4-10 * * 1-5'
   workflow_dispatch:
-    inputs:
-      source_spreadsheet_id:
-        description: 'PEHLI SHEET ID (Jahan Symbols, Columns aur Config hain)'
-        required: true
-        default: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-      config_worksheet_name:
-        description: 'Config wale tab ka naam'
-        required: true
-        default: 'Config'
-      config_period_cell:
-        description: 'Period ki value kis cell mein hai? (e.g., C1)'
-        required: true
-        default: 'C1'
-      config_interval_cell:
-        description: 'Interval ki value kis cell mein hai? (e.g., C2)'
-        required: true
-        default: 'C2'
-      symbols_worksheet_name:
-        description: 'Symbols wale tab ka naam'
-        required: true
-        default: 'NIFTY200'
-      symbols_range:
-        description: 'Symbols ki range (e.g., C2:C201)'
-        required: true
-        default: 'C2:C201'
-      columns_worksheet_name:
-        description: 'Column names wale tab ka naam'
-        required: true
-        default: 'Fetch_Columns'
-      columns_range:
-        description: 'Column names ki range (e.g., A1:A10)'
-        required: true
-        default: 'A1:A10'
-      target_spreadsheet_id:
-        description: 'DUSRI SHEET ID (Jahan historical data save karna hai)'
-        required: true
-        default: '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM'
-      sma_1:
-        description: 'Pehla SMA (e.g., 20)'
-        required: true
-        default: '20'
-      sma_2:
-        description: 'Dusra SMA (e.g., 50)'
-        required: true
-        default: '50'
-      sma_3:
-        description: 'Teesra SMA (e.g., 200)'
-        required: true
-        default: '200'
+
+# --- AAP YAHAN SE SAB KUCH MODIFY KAR SAKTE HAIN ---
+env:
+  SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+  CONFIG_WS: 'Config'
+  CONFIG_PERIOD_CELL: 'C1'
+  CONFIG_INTERVAL_CELL: 'C2'
+  SYMBOLS_WS: 'NIFTY200'
+  SYMBOLS_RANGE: 'C2:C201'
+  COLS_WS: 'Fetch_Columns'
+  COLS_RANGE: 'A1:A10'
+  TARGET_SPREADSHEET_ID: '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM'
 
 jobs:
   fetch_historical_data:
@@ -69,21 +32,9 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
 
-    - name: Zero-Gap Overwrite, SMA Calc & Sync
+    - name: Historical Data Sync (Zero-Gap)
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-        SOURCE_SPREADSHEET_ID: ${{ github.event.inputs.source_spreadsheet_id || '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4' }}
-        CONFIG_WS: ${{ github.event.inputs.config_worksheet_name || 'Config' }}
-        CONFIG_PERIOD_CELL: ${{ github.event.inputs.config_period_cell || 'C1' }}
-        CONFIG_INTERVAL_CELL: ${{ github.event.inputs.config_interval_cell || 'C2' }}
-        SYMBOLS_WS: ${{ github.event.inputs.symbols_worksheet_name || 'NIFTY200' }}
-        SYMBOLS_RANGE: ${{ github.event.inputs.symbols_range || 'C2:C201' }}
-        COLS_WS: ${{ github.event.inputs.columns_worksheet_name || 'Fetch_Columns' }}
-        COLS_RANGE: ${{ github.event.inputs.columns_range || 'A1:A10' }}
-        TARGET_SPREADSHEET_ID: ${{ github.event.inputs.target_spreadsheet_id || '1InHfgj4eJoqc9Ci4579PD_fAAkIa-w49x11AloXllPM' }}
-        SMA_1: ${{ github.event.inputs.sma_1 || '20' }}
-        SMA_2: ${{ github.event.inputs.sma_2 || '50' }}
-        SMA_3: ${{ github.event.inputs.sma_3 || '200' }}
       run: |
         python3 -c "
         import os, json, time
@@ -96,143 +47,63 @@ jobs:
 
         creds_json = os.environ.get('GCP_CREDENTIALS')
         source_id = os.environ.get('SOURCE_SPREADSHEET_ID')
-        config_ws_name = os.environ.get('CONFIG_WS')
-        config_period_cell = os.environ.get('CONFIG_PERIOD_CELL')
-        config_interval_cell = os.environ.get('CONFIG_INTERVAL_CELL')
-        symbols_ws_name = os.environ.get('SYMBOLS_WS')
+        config_ws = os.environ.get('CONFIG_WS')
+        config_period = os.environ.get('CONFIG_PERIOD_CELL')
+        config_interval = os.environ.get('CONFIG_INTERVAL_CELL')
+        symbols_ws = os.environ.get('SYMBOLS_WS')
         symbols_range = os.environ.get('SYMBOLS_RANGE')
-        cols_ws_name = os.environ.get('COLS_WS')
+        cols_ws = os.environ.get('COLS_WS')
         cols_range = os.environ.get('COLS_RANGE')
         target_id = os.environ.get('TARGET_SPREADSHEET_ID')
-
-        try:
-            sma_list = [int(os.environ.get(f'SMA_{i}', 0)) for i in range(1, 4)]
-            sma_list = [s for s in sma_list if s > 0]
-        except:
-            sma_list = []
-
-        def get_col_letter(n):
-            result = ''
-            while n > 0:
-                n, remainder = divmod(n - 1, 26)
-                result = chr(65 + remainder) + result
-            return result
 
         scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
         gc = gspread.authorize(Credentials.from_service_account_info(json.loads(creds_json), scopes=scopes))
 
-        try:
-            source_sh = gc.open_by_key(source_id)
-            config_sheet = source_sh.worksheet(config_ws_name)
-            fetch_period = config_sheet.acell(config_period_cell).value or '1d'
-            fetch_interval = config_sheet.acell(config_interval_cell).value or '1d'
+        # 1. Setup Fetch
+        source_sh = gc.open_by_key(source_id)
+        config_sheet = source_sh.worksheet(config_ws)
+        period = config_sheet.acell(config_period).value or '1mo'
+        interval = config_sheet.acell(config_interval).value or '1d'
 
-            symbol_cells = source_sh.worksheet(symbols_ws_name).get(symbols_range)
-            raw_symbols = [row[0].strip() for row in symbol_cells if row and row[0].strip()]
-            ticker_list = [sym + '.NS' for sym in raw_symbols]
-            
-            col_cells = source_sh.worksheet(cols_ws_name).get(cols_range)
-            dynamic_columns = [row[0].strip() for row in col_cells if row and row[0].strip()]
-            
-            for sma in sma_list:
-                dynamic_columns.append(f'SMA_{sma}')
-            
-            print(f'Config Setup -> Period: {fetch_period}, Interval: {fetch_interval}')
-        except Exception as e:
-            print(f'Error fetching setup data: {e}'); exit(1)
+        sym_data = source_sh.worksheet(symbols_ws).get(symbols_range)
+        symbols = [r[0].strip() for r in sym_data if r and r[0].strip()]
+        col_data = source_sh.worksheet(cols_ws).get(cols_range)
+        columns = [r[0].strip() for r in col_data if r and r[0].strip()]
 
-        if not ticker_list or not dynamic_columns:
-            print('Missing symbols or columns in source. Exiting.'); exit(0)
+        # 2. Fetch Data
+        master_data = {}
+        def fetch(sym):
+            df = yf.Ticker(sym + '.NS').history(period=period, interval=interval)
+            return sym, df
 
-        master_df_dict = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            futures = {executor.submit(fetch, s): s for s in symbols}
+            for f in concurrent.futures.as_completed(futures):
+                sym, df = f.result()
+                if not df.empty: master_data[sym] = df
 
-        def fetch_history(ticker):
-            clean_name = ticker.replace('.NS', '')
-            for _ in range(3):
-                try:
-                    df = yf.Ticker(ticker).history(period=fetch_period, interval=fetch_interval)
-                    if not df.empty and 'Close' in df.columns:
-                        # FIX 1: min_periods=1 lagaya taaki top ki rows blank na rahein!
-                        for sma in sma_list:
-                            df[f'SMA_{sma}'] = df['Close'].rolling(window=sma, min_periods=1).mean()
-                            
-                        df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
-                        return clean_name, df
-                except:
-                    time.sleep(0.3)
-            return clean_name, pd.DataFrame()
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
-            futures = [executor.submit(fetch_history, t) for t in ticker_list]
-            for future in concurrent.futures.as_completed(futures):
-                name, df = future.result()
-                if not df.empty:
-                    master_df_dict[name] = df
-
-        valid_symbols = [sym for sym in raw_symbols if sym in master_df_dict]
+        # 3. Align Data
+        all_ts = sorted(list(set().union(*[d.index.strftime('%Y-%m-%d') for d in master_data.values()])))
         
-        all_timestamps = set()
-        for df in master_df_dict.values():
-            all_timestamps.update(df.index.tolist())
-        sorted_timestamps = sorted(list(all_timestamps))
+        target_sh = gc.open_by_key(target_id)
+        existing = {ws.title: ws for ws in target_sh.worksheets()}
 
-        if not valid_symbols or not sorted_timestamps:
-            print('Yfinance se koi data nahi mila. No updates made.'); exit(0)
-
-        try:
-            target_sh = gc.open_by_key(target_id)
-        except Exception as e:
-            print(f'Error Target Spreadsheet: {e}'); exit(1)
-
-        existing_worksheets = {ws.title: ws for ws in target_sh.worksheets()}
-
-        # 6. Master Alignment & Zero-Gap Matrix Building
-        for col_name in dynamic_columns:
-            if col_name not in existing_worksheets:
-                ws = target_sh.add_worksheet(title=col_name, rows='1000', cols=str(len(valid_symbols) + 5))
-            else:
-                ws = existing_worksheets[col_name]
-
-            # FIX 2: Saare stocks ka data pehle ek unified master table mein daalna
-            temp_dict = {}
-            for sym in valid_symbols:
-                if col_name in master_df_dict[sym].columns:
-                    temp_dict[sym] = master_df_dict[sym][col_name]
+        for col in columns:
+            if col not in existing: ws = target_sh.add_worksheet(title=col, rows='1000', cols='50')
+            else: ws = existing[col]
             
-            if not temp_dict:
-                continue
-                
-            # Unified dataframe banaya aur missing timestamps par FFILL laga diya!
-            df_unified = pd.DataFrame(temp_dict, index=sorted_timestamps)
-            df_unified = df_unified.ffill()
-
-            headers = ['Timestamp'] + valid_symbols
-            data_matrix = [headers]
-            
-            for ts in sorted_timestamps:
+            matrix = [['Timestamp'] + symbols]
+            for ts in all_ts:
                 row = [ts]
-                for sym in valid_symbols:
-                    val = ''
-                    if sym in df_unified.columns:
-                        raw_val = df_unified.loc[ts, sym]
-                        if pd.notnull(raw_val):
-                            val = round(float(raw_val), 2)
-                    row.append(val)
-                data_matrix.append(row)
-
-            try:
-                ws.update(values=data_matrix, range_name='A1')
-                new_rows = len(data_matrix)
-                new_cols = len(headers)
-                next_col_letter = get_col_letter(new_cols + 1)
-                try:
-                    ws.batch_clear([f'A{new_rows + 1}:ZZ10000'])
-                    ws.batch_clear([f'{next_col_letter}1:ZZ{new_rows}'])
-                except:
-                    pass
-                print(f'Tab \"{col_name}\": Seamlessly updated with zero gaps ({new_rows-1} rows).')
-            except Exception as e:
-                print(f'Error updating {col_name}: {e}')
-
-        print('Zero-Gap Sync Completed Successfully!')
+                for sym in symbols:
+                    val = master_data.get(sym, pd.DataFrame()).get(col, pd.Series())
+                    row.append(round(float(val.get(ts, '')), 2) if ts in val and pd.notnull(val[ts]) else '')
+                matrix.append(row)
+            
+            ws.clear()
+            # Batch Writing
+            for i in range(0, len(matrix), 500):
+                ws.update(values=matrix[i:i+500], range_name=f'A{i+1}')
+                time.sleep(0.5)
+            print(f'Updated Tab: {col}')
         "
