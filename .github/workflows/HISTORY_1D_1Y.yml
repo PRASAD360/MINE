@@ -1,4 +1,4 @@
-name: Dynamic Historical 1d (Bulletproof Optimized)
+name: Dynamic Historical 1D (Bulletproof Optimized)
 
 on:
   schedule:
