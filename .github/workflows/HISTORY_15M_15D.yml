@@ -2,8 +2,8 @@ name: Dynamic Historical 1M (Bulletproof Optimized)
 
 on:
   schedule:
-    - cron: '30 23 * * 0-4'   # Subah 7:00 AM IST (Monday to Friday)
-    - cron: '30 0 * * 1-5'   # Subah 8:00 AM IST (Monday to Friday)
+    - cron: '30 23 * * 0-4'   # Subah 5:00 AM IST (Monday to Friday)
+    - cron: '30 0 * * 1-5'   # Subah 6:00 AM IST (Monday to Friday)
   workflow_dispatch:
 
 env:
