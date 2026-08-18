@@ -2,7 +2,7 @@ name: 4.Dynamic Historical 1D (Bulletproof Optimized)
 
 on:
   schedule:
-    - cron: '48 12 * * 1-5'  # 10. Theek 6:18 PM IST
+    - cron: '48 13 * * 1-5'  # 14. Theek 7:18 PM IST
   workflow_dispatch:
 
 env:
