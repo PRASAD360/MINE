@@ -3,8 +3,7 @@ name: 4.Dynamic Historical 15M (Bulletproof Optimized)
 
 on:
   schedule:
-    - cron: '30 23 * * 0-4'   # Subah 5:00 AM IST (Monday to Friday)
-    - cron: '30 0 * * 1-5'   # Subah 6:00 AM IST (Monday to Friday)
+    - cron: '33 13 * * 1-5'  # 13. Theek 7:03 PM IST
   workflow_dispatch:
 
 env:
