@@ -1,1 +1,144 @@
 
+name: 1.Dynamic Historical 1M (Bulletproof Optimized)
+
+on:
+  schedule:
+    - cron: '30 19 * * 0-4'   # Subah 1:00 AM IST (Monday to Friday)
+    - cron: '30 20 * * 0-4'   # Subah 2:00 AM IST (Monday to Friday)
+  workflow_dispatch:
+
+env:
+  SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+  CONFIG_WS: 'Config'
+  CONFIG_PERIOD_CELL: 'D1'
+  CONFIG_INTERVAL_CELL: 'D2'
+  SYMBOLS_WS: 'NIFTY1'
+  SYMBOLS_RANGE: 'A2:A51'
+  COLS_WS: 'Fetch_Columns'
+  COLS_RANGE: 'A1:A10'
+  TARGET_SPREADSHEET_ID: '1pCrEf9oCQg2c4lWpRgS3ejx8Aqa5xCnjp4K_ii3Q0IA'
+
+jobs:
+  fetch_historical_data:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: pip install gspread google-auth yfinance pandas pytz --disable-pip-version-check
+
+    - name: Bulletproof Historical Data Sync (Optimized)
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      run: |
+        python3 -c "
+        import os, json, gspread
+        from google.oauth2.service_account import Credentials
+        import yfinance as yf
+        import pandas as pd
+        import concurrent.futures
+
+        # 1. Setup & Credentials
+        creds = Credentials.from_service_account_info(
+            json.loads(os.environ['GCP_CREDENTIALS']), 
+            scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+        )
+        gc = gspread.authorize(creds)
+        env = os.environ
+        
+        source_sh = gc.open_by_key(env['SOURCE_SPREADSHEET_ID'])
+
+        # --- OPTIMIZATION 1: Batch Get (Sab kuch 1 API call mein padhna) ---
+        ranges = [
+            f\"{env['CONFIG_WS']}!{env['CONFIG_PERIOD_CELL']}:{env['CONFIG_INTERVAL_CELL']}\",
+            f\"{env['SYMBOLS_WS']}!{env['SYMBOLS_RANGE']}\",
+            f\"{env['COLS_WS']}!{env['COLS_RANGE']}\"
+        ]
+        
+        print('Fetching Configs from Google Sheets (1 API Call)...')
+        batch_data = source_sh.values_batch_get(ranges).get('valueRanges', [])
+        
+        def safe_get(index):
+            return batch_data[index].get('values', []) if len(batch_data) > index else []
+
+        cfg_data = safe_get(0)
+        period = cfg_data[0][0] if len(cfg_data) > 0 and len(cfg_data[0]) > 0 else '1mo'
+        interval = cfg_data[1][0] if len(cfg_data) > 1 and len(cfg_data[1]) > 0 else '1d'
+        
+        raw_symbols = [r[0].strip() for r in safe_get(1) if r and str(r[0]).strip()]
+        cols = [r[0].strip() for r in safe_get(2) if r and str(r[0]).strip()]
+
+        # --- YFINANCE LOGIC (Multithreaded - Safe against single symbol failures) ---
+        master_dfs = {}
+        def fetch(sym):
+            try:
+                ticker = sym if any(sym.endswith(ext) for ext in ['.NS', '.BO']) or sym.startswith('^') else sym + '.NS'
+                df = yf.Ticker(ticker).history(period=period, interval=interval)
+                if not df.empty:
+                    df.index = df.index.strftime('%Y-%m-%d %H:%M:%S' if ':' in str(df.index[0]) else '%Y-%m-%d')
+                    return sym, df
+            except Exception as e:
+                pass # Silent ignore to keep logs clean
+            return sym, None
+
+        print(f'Fetching YFinance Data for {len(raw_symbols)} symbols...')
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            futures = {executor.submit(fetch, s): s for s in raw_symbols}
+            for f in concurrent.futures.as_completed(futures):
+                sym, df = f.result()
+                if df is not None: 
+                    master_dfs[sym] = df
+
+        if not master_dfs:
+            print('Error: Yfinance se ek bhi symbol ka data nahi mila!')
+            exit(1)
+
+        # --- OPTIMIZATION 2: Safe & Fast Writes ---
+        target_sh = gc.open_by_key(env['TARGET_SPREADSHEET_ID'])
+        existing_ws = {ws.title: ws for ws in target_sh.worksheets()}
+        
+        all_dates = sorted(list(set().union(*[df.index for df in master_dfs.values()])))
+        valid_symbols = [s for s in raw_symbols if s in master_dfs]
+
+        for col in cols:
+            rows_data = [['Timestamp'] + valid_symbols]
+            
+            for ts in all_dates:
+                row = [ts]
+                for sym in valid_symbols:
+                    val = ''
+                    df = master_dfs[sym]
+                    if col in df.columns and ts in df.index:
+                        raw_val = df.at[ts, col]
+                        if not pd.isna(raw_val):
+                            try:
+                                val = round(float(raw_val), 2)
+                            except:
+                                val = str(raw_val)
+                    row.append(val)
+                rows_data.append(row)
+
+            needed_rows = max(2000, len(rows_data) + 50)
+            needed_cols = len(valid_symbols) + 2
+            
+            if col not in existing_ws:
+                ws = target_sh.add_worksheet(title=col, rows=needed_rows, cols=needed_cols)
+            else:
+                ws = existing_ws[col]
+                # Boundary check: Ensure sheet is large enough before pasting
+                if ws.row_count < needed_rows or ws.col_count < needed_cols:
+                    ws.resize(rows=needed_rows, cols=needed_cols)
+
+            ws.clear()
+            # Ek single request mein pura data update! (No sleep needed)
+            ws.update(values=rows_data, range_name='A1')
+            print(f'Successfully Synced Tab: {col} in 1 API Request.')
+
+        print('All Historical Data Synced Successfully with Minimum API Requests!')
+        "
