@@ -2,7 +2,7 @@ name: Live Market Dynamic Multi-Tab Sync
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+   # - cron: '*/15 * * * *'
   workflow_dispatch:
 
 # --- CONFIGURATIONS SECTION ---
