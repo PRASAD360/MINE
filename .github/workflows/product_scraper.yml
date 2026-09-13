@@ -1,4 +1,4 @@
-name: Ultimate React/Next.js Scraper
+name: Ultimate Master Deep Crawler
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       url:
         description: 'Target Website URL to Scrape'
         required: true
-        default: 'https://modxcomputers.com/product-category/pc-components'
+        default: 'https://modxcomputers.com/'
   
   schedule:
     - cron: '0 0 * * *' 
@@ -31,9 +31,9 @@ jobs:
           npm init -y
           npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth csv-writer
 
-      - name: Run Next.js Smart Scraper
+      - name: Run Master Deep Crawler
         env:
-          TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
+          TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/' }}
         run: |
           node -e "
           const puppeteer = require('puppeteer-extra');
@@ -42,8 +42,8 @@ jobs:
           const { createObjectCsvWriter } = require('csv-writer');
 
           (async () => {
-            const targetUrl = process.env.TARGET_URL;
-            console.log('Launching Stealth Browser for Next.js App:', targetUrl);
+            const baseUrl = process.env.TARGET_URL;
+            console.log('Launching Stealth Browser for Full Crawl:', baseUrl);
             
             const browser = await puppeteer.launch({ 
               headless: 'new',
@@ -54,71 +54,115 @@ jobs:
             await page.setViewport({ width: 1366, height: 768 });
             
             try {
-              console.log('Navigating...');
-              await page.goto(targetUrl, { waitUntil: 'networkidle0', timeout: 60000 });
-              
-              // Extra wait for React to hydrate and render DOM
-              console.log('Waiting 5 seconds for React components to load...');
+              console.log('Navigating to homepage...');
+              await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
               await new Promise(r => setTimeout(r, 5000));
               
-              const pageTitle = await page.title();
-              console.log('Page Title loaded as:', pageTitle);
-              
-              // UNIVERSAL TEXT-BASED EXTRACTION (Ignores CSS Classes)
-              const products = await page.evaluate(() => {
-                // 1. Find all deepest text elements containing '₹'
-                const allElements = document.querySelectorAll('*');
-                const priceNodes = Array.from(allElements).filter(el => 
-                  el.children.length === 0 && el.textContent.includes('₹')
-                );
-                
-                const items = [];
-                const seenNames = new Set();
-                
-                priceNodes.forEach(priceEl => {
-                  // Ignore huge blocks of text
-                  if(priceEl.textContent.length > 40) return;
-                  
-                  let container = priceEl.parentElement;
-                  let depth = 0;
-                  let found = false;
-                  
-                  // Crawl up the DOM tree up to 8 levels to find the product name
-                  while(container && depth < 8 && !found) {
-                    // Look for Heading tags which usually contain the product title
-                    const titleEl = container.querySelector('h1, h2, h3, h4, h5, h6');
-                    
-                    if (titleEl && titleEl.innerText.trim().length > 5) {
-                      const name = titleEl.innerText.trim().replace(/,/g, ' ');
-                      
-                      if (!seenNames.has(name)) {
-                        seenNames.add(name);
-                        
-                        let mrp = 'N/A';
-                        let salePrice = priceEl.innerText.trim().replace(/,/g, '');
-                        
-                        // Check for strikethrough (del, s, strike) for MRP in the same container
-                        const delEl = container.querySelector('del, strike, s');
-                        if (delEl) {
-                          mrp = delEl.innerText.trim().replace(/,/g, '');
-                        }
-                        
-                        items.push({ name, mrp, salePrice });
-                        found = true;
-                      }
-                    }
-                    container = container.parentElement;
-                    depth++;
-                  }
-                });
-                return items;
+              // 1. Extract all product category links from the homepage
+              const categoryLinks = await page.evaluate(() => {
+                const links = Array.from(document.querySelectorAll('a[href*=\"/product-category/\"]'));
+                // Remove duplicates and hash links
+                const uniqueLinks = [...new Set(links.map(a => a.href.split('#')[0]))];
+                return uniqueLinks;
               });
 
-              console.log(\`Success! Visually extracted \${products.length} products.\`);
+              console.log(\`Found \${categoryLinks.length} unique category links to crawl.\`);
 
-              if (products.length > 0) {
+              let allProducts = [];
+              let seenNames = new Set();
+
+              // 2. Loop through each category page
+              // Note: Limiting to 25 categories max to avoid GitHub Actions 6-hour timeout limits
+              const maxCategories = Math.min(categoryLinks.length, 25);
+              
+              for (let i = 0; i < maxCategories; i++) {
+                const currentUrl = categoryLinks[i];
+                console.log(\`\\n[Page \${i+1}/\${maxCategories}] Crawling: \${currentUrl}\`);
+                
+                try {
+                  await page.goto(currentUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+                  
+                  // Auto-scroll down the page to trigger React lazy-loading
+                  await page.evaluate(async () => {
+                    await new Promise((resolve) => {
+                      let totalHeight = 0;
+                      let distance = 500;
+                      let timer = setInterval(() => {
+                        let scrollHeight = document.body.scrollHeight;
+                        window.scrollBy(0, distance);
+                        totalHeight += distance;
+                        if (totalHeight >= scrollHeight - 500) {
+                          clearInterval(timer);
+                          resolve();
+                        }
+                      }, 400);
+                    });
+                  });
+                  
+                  await new Promise(r => setTimeout(r, 3000)); // Final wait for elements to render
+
+                  // 3. Smart Extraction Logic
+                  const products = await page.evaluate(() => {
+                    const allElements = document.querySelectorAll('*');
+                    const priceNodes = Array.from(allElements).filter(el => 
+                      el.children.length === 0 && el.textContent.includes('₹')
+                    );
+                    
+                    const items = [];
+                    
+                    priceNodes.forEach(priceEl => {
+                      if(priceEl.textContent.length > 40) return;
+                      
+                      let container = priceEl.parentElement;
+                      let depth = 0;
+                      let found = false;
+                      
+                      while(container && depth < 8 && !found) {
+                        const titleEl = container.querySelector('h1, h2, h3, h4, h5, h6');
+                        
+                        if (titleEl && titleEl.innerText.trim().length > 5) {
+                          const name = titleEl.innerText.trim().replace(/,/g, ' ');
+                          let mrp = 'N/A';
+                          let salePrice = priceEl.innerText.trim().replace(/,/g, '');
+                          
+                          const delEl = container.querySelector('del, strike, s');
+                          if (delEl) {
+                            mrp = delEl.innerText.trim().replace(/,/g, '');
+                          }
+                          
+                          items.push({ name, mrp, salePrice });
+                          found = true;
+                        }
+                        container = container.parentElement;
+                        depth++;
+                      }
+                    });
+                    return items;
+                  });
+
+                  // Add to global list, avoiding cross-category duplicates
+                  let newItemsAdded = 0;
+                  products.forEach(p => {
+                    if (!seenNames.has(p.name)) {
+                      seenNames.add(p.name);
+                      allProducts.push(p);
+                      newItemsAdded++;
+                    }
+                  });
+                  
+                  console.log(\`Extracted \${newItemsAdded} new products from this category.\`);
+                  
+                } catch (catError) {
+                  console.log(\`Skipping \${currentUrl} due to error: \${catError.message}\`);
+                }
+              }
+
+              console.log(\`\\n--- CRAWL COMPLETE: \${allProducts.length} total unique products extracted! ---\`);
+
+              // 4. Save everything to a master CSV
+              if (allProducts.length > 0) {
                 const csvWriter = createObjectCsvWriter({
-                  path: 'products_list.csv',
+                  path: 'modx_full_catalog.csv',
                   header: [
                     { id: 'name', title: 'Product Name' },
                     { id: 'mrp', title: 'MRP' },
@@ -126,13 +170,13 @@ jobs:
                   ]
                 });
                 
-                await csvWriter.writeRecords(products);
-                console.log('CSV file successfully generated!');
+                await csvWriter.writeRecords(allProducts);
+                console.log('modx_full_catalog.csv successfully generated!');
               } else {
-                console.log('WARNING: Still 0 products found. The page might require scrolling to load items.');
+                console.log('WARNING: No products were extracted across all crawled pages.');
               }
             } catch (error) {
-              console.error('Scraping Error:', error);
+              console.error('Fatal Crawler Error:', error);
             } finally {
               await browser.close();
             }
@@ -143,6 +187,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
-          git add products_list.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated CSV via React Scraper"
+          git add modx_full_catalog.csv
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-crawled full website catalog"
           git push
