@@ -58,12 +58,10 @@ jobs:
               await page.goto(baseUrl, { waitUntil: 'networkidle2', timeout: 60000 });
               await new Promise(r => setTimeout(r, 5000));
               
-              // 1. Extract all product category links from the homepage
+              // 1. Extract all product category links
               const categoryLinks = await page.evaluate(() => {
                 const links = Array.from(document.querySelectorAll('a[href*=\"/product-category/\"]'));
-                // Remove duplicates and hash links
-                const uniqueLinks = [...new Set(links.map(a => a.href.split('#')[0]))];
-                return uniqueLinks;
+                return [...new Set(links.map(a => a.href.split('#')[0]))];
               });
 
               console.log(\`Found \${categoryLinks.length} unique category links to crawl.\`);
@@ -71,18 +69,21 @@ jobs:
               let allProducts = [];
               let seenNames = new Set();
 
-              // 2. Loop through each category page
-              // Note: Limiting to 25 categories max to avoid GitHub Actions 6-hour timeout limits
               const maxCategories = Math.min(categoryLinks.length, 25);
               
               for (let i = 0; i < maxCategories; i++) {
                 const currentUrl = categoryLinks[i];
                 console.log(\`\\n[Page \${i+1}/\${maxCategories}] Crawling: \${currentUrl}\`);
                 
+                // --- CATEGORY EXTRACTION FROM URL ---
+                const urlParts = currentUrl.split('/').filter(Boolean);
+                const rawCategory = urlParts[urlParts.length - 1] || 'GENERAL';
+                const formattedCategory = rawCategory.replace(/-/g, ' ').toUpperCase();
+                
                 try {
                   await page.goto(currentUrl, { waitUntil: 'networkidle2', timeout: 60000 });
                   
-                  // Auto-scroll down the page to trigger React lazy-loading
+                  // Auto-scroll
                   await page.evaluate(async () => {
                     await new Promise((resolve) => {
                       let totalHeight = 0;
@@ -99,9 +100,9 @@ jobs:
                     });
                   });
                   
-                  await new Promise(r => setTimeout(r, 3000)); // Final wait for elements to render
+                  await new Promise(r => setTimeout(r, 3000));
 
-                  // 3. Smart Extraction Logic
+                  // Smart Extraction
                   const products = await page.evaluate(() => {
                     const allElements = document.querySelectorAll('*');
                     const priceNodes = Array.from(allElements).filter(el => 
@@ -140,17 +141,23 @@ jobs:
                     return items;
                   });
 
-                  // Add to global list, avoiding cross-category duplicates
+                  // Add category to each product and avoid duplicates
                   let newItemsAdded = 0;
                   products.forEach(p => {
                     if (!seenNames.has(p.name)) {
                       seenNames.add(p.name);
-                      allProducts.push(p);
+                      // Adding category as the first property
+                      allProducts.push({ 
+                        category: formattedCategory, 
+                        name: p.name, 
+                        mrp: p.mrp, 
+                        salePrice: p.salePrice 
+                      });
                       newItemsAdded++;
                     }
                   });
                   
-                  console.log(\`Extracted \${newItemsAdded} new products from this category.\`);
+                  console.log(\`Extracted \${newItemsAdded} new items for category: \${formattedCategory}\`);
                   
                 } catch (catError) {
                   console.log(\`Skipping \${currentUrl} due to error: \${catError.message}\`);
@@ -159,11 +166,12 @@ jobs:
 
               console.log(\`\\n--- CRAWL COMPLETE: \${allProducts.length} total unique products extracted! ---\`);
 
-              // 4. Save everything to a master CSV
+              // 4. Save to CSV with Category as First Column
               if (allProducts.length > 0) {
                 const csvWriter = createObjectCsvWriter({
                   path: 'modx_full_catalog.csv',
                   header: [
+                    { id: 'category', title: 'Category' },
                     { id: 'name', title: 'Product Name' },
                     { id: 'mrp', title: 'MRP' },
                     { id: 'salePrice', title: 'Sale Price' }
@@ -173,7 +181,7 @@ jobs:
                 await csvWriter.writeRecords(allProducts);
                 console.log('modx_full_catalog.csv successfully generated!');
               } else {
-                console.log('WARNING: No products were extracted across all crawled pages.');
+                console.log('WARNING: No products were extracted.');
               }
             } catch (error) {
               console.error('Fatal Crawler Error:', error);
@@ -188,5 +196,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add modx_full_catalog.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-crawled full website catalog"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-crawled full website catalog with Categories"
           git push
