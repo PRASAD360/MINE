@@ -1,4 +1,4 @@
-name: Single-File Dynamic Product Scraper
+name: Ultimate Dynamic Scraper
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
       url:
         description: 'Target Website URL to Scrape'
         required: true
-        default: 'https://modxcomputers.com/product-category/pc-components/processor/'
+        default: 'https://modxcomputers.com/product-category/pc-components/'
   
   schedule:
     - cron: '0 0 * * *' 
@@ -21,74 +21,94 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.10'
+          node-version: 18
 
-      - name: Install Dependencies
-        run: pip install requests beautifulsoup4
-
-      - name: Run Inline Scraper
-        env:
-          TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
+      - name: Install Playwright & Chromium
         run: |
-          python -c "
-          import os, requests, csv
-          from bs4 import BeautifulSoup
-          
-          target_url = os.environ.get('TARGET_URL')
-          
-          # Upgraded headers to bypass basic anti-bot systems
-          headers = {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.5',
-              'Referer': 'https://www.google.com/'
-          }
-          
-          print(f'Fetching data from: {target_url}')
-          response = requests.get(target_url, headers=headers)
-          
-          if response.status_code == 200:
-              print(f'Page Fetched! HTML Length: {len(response.text)} bytes')
-              soup = BeautifulSoup(response.text, 'html.parser')
-              products_data = []
+          npm init -y
+          npm install playwright csv-writer
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright Scraper
+        env:
+          TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/' }}
+        run: |
+          node -e "
+          const { chromium } = require('playwright');
+          const { createObjectCsvWriter } = require('csv-writer');
+
+          (async () => {
+            console.log('Launching headless Chrome...');
+            const browser = await chromium.launch({ headless: true });
+            
+            // Masking the browser to look like a real user
+            const context = await browser.newContext({
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            });
+            const page = await context.newPage();
+            
+            const targetUrl = process.env.TARGET_URL;
+            console.log('Navigating to:', targetUrl);
+            
+            try {
+              // Wait until network is mostly idle (bypasses loading screens)
+              await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: 60000 });
               
-              # Upgraded WooCommerce CSS Selectors
-              product_blocks = soup.select('.product, .type-product, li.product')
-              print(f'Found {len(product_blocks)} product block(s) on the page.')
+              console.log('Page loaded. Waiting 5 seconds for JS/Cloudflare to settle...');
+              await page.waitForTimeout(5000);
               
-              for item in product_blocks:
-                  title_tag = item.select_one('.woocommerce-loop-product__title, h2, h3')
-                  name = title_tag.text.strip() if title_tag else 'N/A'
+              // Extracting data using standard WooCommerce classes
+              const products = await page.\$\$eval('.product, li.product', items => {
+                return items.map(item => {
+                  const titleNode = item.querySelector('.woocommerce-loop-product__title, h2, h3');
+                  const name = titleNode ? titleNode.innerText.trim() : 'Unknown Product';
                   
-                  price_span = item.select_one('.price')
-                  mrp, sale_price = 'N/A', 'N/A'
+                  const priceNode = item.querySelector('.price');
+                  let mrp = 'N/A';
+                  let salePrice = 'N/A';
                   
-                  if price_span:
-                      del_tag = price_span.find('del')
-                      ins_tag = price_span.find('ins')
-                      if del_tag and ins_tag:
-                          mrp = del_tag.text.strip()
-                          sale_price = ins_tag.text.strip()
-                      else:
-                          sale_price = price_span.text.strip()
+                  if (priceNode) {
+                    const del = priceNode.querySelector('del');
+                    const ins = priceNode.querySelector('ins');
+                    if (del && ins) {
+                      mrp = del.innerText.trim();
+                      salePrice = ins.innerText.trim();
+                    } else {
+                      salePrice = priceNode.innerText.trim();
+                    }
+                  }
                   
-                  if name != 'N/A':
-                      products_data.append([name, mrp, sale_price])
-              
-              if len(products_data) == 0:
-                  print('WARNING: 0 products extracted. E-commerce site might be blocking GitHub Actions IP or loading products via JavaScript.')
-              
-              with open('products_list.csv', 'w', newline='', encoding='utf-8') as f:
-                  writer = csv.writer(f)
-                  writer.writerow(['Product Name', 'MRP', 'Sale Price'])
-                  writer.writerows(products_data)
-                  
-              print(f'Success! {len(products_data)} products saved to products_list.csv')
-          else:
-              print(f'Failed to fetch. HTTP Status: {response.status_code}')
+                  return { name, mrp, salePrice };
+                });
+              });
+
+              console.log(\`Successfully extracted \${products.length} products!\`);
+
+              if (products.length > 0) {
+                const csvWriter = createObjectCsvWriter({
+                  path: 'products_list.csv',
+                  header: [
+                    { id: 'name', title: 'Product Name' },
+                    { id: 'mrp', title: 'MRP' },
+                    { id: 'salePrice', title: 'Sale Price' }
+                  ]
+                });
+                
+                await csvWriter.writeRecords(products);
+                console.log('CSV file written successfully.');
+              } else {
+                console.log('WARNING: No products found. The site might have blocked the IP or changed its layout.');
+              }
+
+            } catch (error) {
+              console.error('Error during scraping:', error);
+            } finally {
+              await browser.close();
+            }
+          })();
           "
 
       - name: Commit and Push CSV
@@ -96,5 +116,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add products_list.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated products CSV"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated products CSV via Playwright"
           git push
