@@ -1,4 +1,4 @@
-name: Ultimate Smart Scraper
+name: Ultimate React/Next.js Scraper
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
           npm init -y
           npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth csv-writer
 
-      - name: Run Smart Scraper
+      - name: Run Next.js Smart Scraper
         env:
           TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
         run: |
@@ -43,7 +43,7 @@ jobs:
 
           (async () => {
             const targetUrl = process.env.TARGET_URL;
-            console.log('Launching Stealth Browser for:', targetUrl);
+            console.log('Launching Stealth Browser for Next.js App:', targetUrl);
             
             const browser = await puppeteer.launch({ 
               headless: 'new',
@@ -55,47 +55,52 @@ jobs:
             
             try {
               console.log('Navigating...');
-              await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+              await page.goto(targetUrl, { waitUntil: 'networkidle0', timeout: 60000 });
               
-              console.log('Waiting 5 seconds for products to fully render...');
+              // Extra wait for React to hydrate and render DOM
+              console.log('Waiting 5 seconds for React components to load...');
               await new Promise(r => setTimeout(r, 5000));
               
               const pageTitle = await page.title();
               console.log('Page Title loaded as:', pageTitle);
               
-              // SMART EXTRACTION: Hunts for prices first, then finds the names backwards
+              // UNIVERSAL TEXT-BASED EXTRACTION (Ignores CSS Classes)
               const products = await page.evaluate(() => {
-                const priceNodes = Array.from(document.querySelectorAll('.price, .amount, .woocommerce-Price-amount'));
+                // 1. Find all deepest text elements containing '₹'
+                const allElements = document.querySelectorAll('*');
+                const priceNodes = Array.from(allElements).filter(el => 
+                  el.children.length === 0 && el.textContent.includes('₹')
+                );
+                
                 const items = [];
                 const seenNames = new Set();
                 
                 priceNodes.forEach(priceEl => {
+                  // Ignore huge blocks of text
+                  if(priceEl.textContent.length > 40) return;
+                  
                   let container = priceEl.parentElement;
                   let depth = 0;
                   let found = false;
                   
-                  // Go up the DOM tree up to 6 levels to find the product name
-                  while(container && depth < 6 && !found) {
-                    const titleEl = container.querySelector('h2, h3, h4, [class*=\"title\"], [class*=\"name\"]');
+                  // Crawl up the DOM tree up to 8 levels to find the product name
+                  while(container && depth < 8 && !found) {
+                    // Look for Heading tags which usually contain the product title
+                    const titleEl = container.querySelector('h1, h2, h3, h4, h5, h6');
                     
                     if (titleEl && titleEl.innerText.trim().length > 5) {
-                      const name = titleEl.innerText.trim().replace(/,/g, '');
+                      const name = titleEl.innerText.trim().replace(/,/g, ' ');
                       
-                      // Avoid duplicates
                       if (!seenNames.has(name)) {
                         seenNames.add(name);
                         
                         let mrp = 'N/A';
-                        let salePrice = 'N/A';
+                        let salePrice = priceEl.innerText.trim().replace(/,/g, '');
                         
-                        const del = container.querySelector('del');
-                        const ins = container.querySelector('ins');
-                        
-                        if (del && ins) {
-                          mrp = del.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
-                          salePrice = ins.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
-                        } else {
-                          salePrice = priceEl.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
+                        // Check for strikethrough (del, s, strike) for MRP in the same container
+                        const delEl = container.querySelector('del, strike, s');
+                        if (delEl) {
+                          mrp = delEl.innerText.trim().replace(/,/g, '');
                         }
                         
                         items.push({ name, mrp, salePrice });
@@ -109,7 +114,7 @@ jobs:
                 return items;
               });
 
-              console.log(\`Successfully extracted \${products.length} products!\`);
+              console.log(\`Success! Visually extracted \${products.length} products.\`);
 
               if (products.length > 0) {
                 const csvWriter = createObjectCsvWriter({
@@ -122,11 +127,9 @@ jobs:
                 });
                 
                 await csvWriter.writeRecords(products);
-                console.log('CSV file written successfully.');
+                console.log('CSV file successfully generated!');
               } else {
-                console.log('WARNING: Still 0 products. Dumping page HTML snippet for debugging:');
-                const bodyHTML = await page.evaluate(() => document.body.innerHTML.substring(0, 1500));
-                console.log(bodyHTML);
+                console.log('WARNING: Still 0 products found. The page might require scrolling to load items.');
               }
             } catch (error) {
               console.error('Scraping Error:', error);
@@ -141,5 +144,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add products_list.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated CSV via Smart Stealth Scraper"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated CSV via React Scraper"
           git push
