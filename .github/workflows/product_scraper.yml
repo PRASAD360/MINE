@@ -1,4 +1,4 @@
-name: Ultimate Stealth Scraper
+name: Ultimate Smart Scraper
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
           npm init -y
           npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth csv-writer
 
-      - name: Run Stealth Scraper
+      - name: Run Smart Scraper
         env:
           TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
         run: |
@@ -51,47 +51,62 @@ jobs:
             });
             
             const page = await browser.newPage();
-            
-            // Randomize viewport to look human
             await page.setViewport({ width: 1366, height: 768 });
             
             try {
               console.log('Navigating...');
               await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
               
-              // Wait for 5 seconds to let Cloudflare JS challenge finish
-              console.log('Waiting for 5 seconds to bypass Cloudflare JS...');
+              console.log('Waiting 5 seconds for products to fully render...');
               await new Promise(r => setTimeout(r, 5000));
               
               const pageTitle = await page.title();
               console.log('Page Title loaded as:', pageTitle);
               
-              if (pageTitle.includes('Just a moment') || pageTitle.includes('Cloudflare')) {
-                  console.log('FAILED: Cloudflare is still blocking the GitHub Action IP completely.');
-              }
-
+              // SMART EXTRACTION: Hunts for prices first, then finds the names backwards
               const products = await page.evaluate(() => {
-                const items = Array.from(document.querySelectorAll('.product, li.product'));
-                return items.map(item => {
-                  const titleNode = item.querySelector('.woocommerce-loop-product__title, h2, h3');
-                  const name = titleNode ? titleNode.innerText.trim() : 'N/A';
+                const priceNodes = Array.from(document.querySelectorAll('.price, .amount, .woocommerce-Price-amount'));
+                const items = [];
+                const seenNames = new Set();
+                
+                priceNodes.forEach(priceEl => {
+                  let container = priceEl.parentElement;
+                  let depth = 0;
+                  let found = false;
                   
-                  const priceNode = item.querySelector('.price');
-                  let mrp = 'N/A';
-                  let salePrice = 'N/A';
-                  
-                  if (priceNode) {
-                    const del = priceNode.querySelector('del');
-                    const ins = priceNode.querySelector('ins');
-                    if (del && ins) {
-                      mrp = del.innerText.trim();
-                      salePrice = ins.innerText.trim();
-                    } else {
-                      salePrice = priceNode.innerText.trim();
+                  // Go up the DOM tree up to 6 levels to find the product name
+                  while(container && depth < 6 && !found) {
+                    const titleEl = container.querySelector('h2, h3, h4, [class*=\"title\"], [class*=\"name\"]');
+                    
+                    if (titleEl && titleEl.innerText.trim().length > 5) {
+                      const name = titleEl.innerText.trim().replace(/,/g, '');
+                      
+                      // Avoid duplicates
+                      if (!seenNames.has(name)) {
+                        seenNames.add(name);
+                        
+                        let mrp = 'N/A';
+                        let salePrice = 'N/A';
+                        
+                        const del = container.querySelector('del');
+                        const ins = container.querySelector('ins');
+                        
+                        if (del && ins) {
+                          mrp = del.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
+                          salePrice = ins.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
+                        } else {
+                          salePrice = priceEl.innerText.trim().replace(/,/g, '').replace(/\n/g, ' ');
+                        }
+                        
+                        items.push({ name, mrp, salePrice });
+                        found = true;
+                      }
                     }
+                    container = container.parentElement;
+                    depth++;
                   }
-                  return { name, mrp, salePrice };
                 });
+                return items;
               });
 
               console.log(\`Successfully extracted \${products.length} products!\`);
@@ -108,6 +123,10 @@ jobs:
                 
                 await csvWriter.writeRecords(products);
                 console.log('CSV file written successfully.');
+              } else {
+                console.log('WARNING: Still 0 products. Dumping page HTML snippet for debugging:');
+                const bodyHTML = await page.evaluate(() => document.body.innerHTML.substring(0, 1500));
+                console.log(bodyHTML);
               }
             } catch (error) {
               console.error('Scraping Error:', error);
@@ -122,5 +141,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add products_list.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated via Puppeteer Stealth Scraper"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated CSV via Smart Stealth Scraper"
           git push
