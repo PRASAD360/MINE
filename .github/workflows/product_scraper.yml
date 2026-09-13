@@ -1,4 +1,4 @@
-name: Stealth Dynamic Scraper
+name: Ultimate Stealth Scraper
 
 on:
   workflow_dispatch:
@@ -21,68 +21,100 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.10'
+          node-version: 18
 
-      - name: Install Stealth Dependencies
-        run: pip install curl_cffi beautifulsoup4
+      - name: Install Puppeteer Stealth
+        run: |
+          npm init -y
+          npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth csv-writer
 
       - name: Run Stealth Scraper
         env:
           TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
         run: |
-          python -c "
-          import os, csv
-          from bs4 import BeautifulSoup
-          from curl_cffi import requests
-          
-          target_url = os.environ.get('TARGET_URL')
-          print(f'Fetching stealthily from: {target_url}')
-          
-          try:
-              # 'impersonate' spoofs the exact signature of Chrome 110 to bypass Cloudflare
-              response = requests.get(target_url, impersonate='chrome110', timeout=30)
+          node -e "
+          const puppeteer = require('puppeteer-extra');
+          const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+          puppeteer.use(StealthPlugin());
+          const { createObjectCsvWriter } = require('csv-writer');
+
+          (async () => {
+            const targetUrl = process.env.TARGET_URL;
+            console.log('Launching Stealth Browser for:', targetUrl);
+            
+            const browser = await puppeteer.launch({ 
+              headless: 'new',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            
+            const page = await browser.newPage();
+            
+            // Randomize viewport to look human
+            await page.setViewport({ width: 1366, height: 768 });
+            
+            try {
+              console.log('Navigating...');
+              await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 60000 });
               
-              if response.status_code == 200:
-                  soup = BeautifulSoup(response.text, 'html.parser')
-                  products_data = []
+              // Wait for 5 seconds to let Cloudflare JS challenge finish
+              console.log('Waiting for 5 seconds to bypass Cloudflare JS...');
+              await new Promise(r => setTimeout(r, 5000));
+              
+              const pageTitle = await page.title();
+              console.log('Page Title loaded as:', pageTitle);
+              
+              if (pageTitle.includes('Just a moment') || pageTitle.includes('Cloudflare')) {
+                  console.log('FAILED: Cloudflare is still blocking the GitHub Action IP completely.');
+              }
+
+              const products = await page.evaluate(() => {
+                const items = Array.from(document.querySelectorAll('.product, li.product'));
+                return items.map(item => {
+                  const titleNode = item.querySelector('.woocommerce-loop-product__title, h2, h3');
+                  const name = titleNode ? titleNode.innerText.trim() : 'N/A';
                   
-                  product_blocks = soup.find_all(['li', 'div'], class_=['product', 'type-product'])
-                  print(f'Bypass successful! Found {len(product_blocks)} products on the page.')
+                  const priceNode = item.querySelector('.price');
+                  let mrp = 'N/A';
+                  let salePrice = 'N/A';
                   
-                  for item in product_blocks:
-                      title_tag = item.find(['h2', 'h3'])
-                      name = title_tag.text.strip() if title_tag else 'N/A'
-                      
-                      price_span = item.find('span', class_='price')
-                      mrp, sale_price = 'N/A', 'N/A'
-                      
-                      if price_span:
-                          del_tag = price_span.find('del')
-                          ins_tag = price_span.find('ins')
-                          if del_tag and ins_tag:
-                              mrp = del_tag.text.strip()
-                              sale_price = ins_tag.text.strip()
-                          else:
-                              sale_price = price_span.text.strip()
-                      
-                      if name != 'N/A':
-                          products_data.append([name, mrp, sale_price])
-                  
-                  if products_data:
-                      with open('products_list.csv', 'w', newline='', encoding='utf-8') as f:
-                          writer = csv.writer(f)
-                          writer.writerow(['Product Name', 'MRP', 'Sale Price'])
-                          writer.writerows(products_data)
-                      print(f'Success! Saved {len(products_data)} products to CSV.')
-                  else:
-                      print('WARNING: 0 products found. Layout might be different.')
-              else:
-                  print(f'Failed! HTTP Status: {response.status_code}')
-          except Exception as e:
-              print(f'Error occurred: {e}')
+                  if (priceNode) {
+                    const del = priceNode.querySelector('del');
+                    const ins = priceNode.querySelector('ins');
+                    if (del && ins) {
+                      mrp = del.innerText.trim();
+                      salePrice = ins.innerText.trim();
+                    } else {
+                      salePrice = priceNode.innerText.trim();
+                    }
+                  }
+                  return { name, mrp, salePrice };
+                });
+              });
+
+              console.log(\`Successfully extracted \${products.length} products!\`);
+
+              if (products.length > 0) {
+                const csvWriter = createObjectCsvWriter({
+                  path: 'products_list.csv',
+                  header: [
+                    { id: 'name', title: 'Product Name' },
+                    { id: 'mrp', title: 'MRP' },
+                    { id: 'salePrice', title: 'Sale Price' }
+                  ]
+                });
+                
+                await csvWriter.writeRecords(products);
+                console.log('CSV file written successfully.');
+              }
+            } catch (error) {
+              console.error('Scraping Error:', error);
+            } finally {
+              await browser.close();
+            }
+          })();
           "
 
       - name: Commit and Push CSV
@@ -90,5 +122,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add products_list.csv
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated CSV via Stealth Scraper"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated via Puppeteer Stealth Scraper"
           git push
