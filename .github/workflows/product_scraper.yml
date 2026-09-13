@@ -6,9 +6,8 @@ on:
       url:
         description: 'Target Website URL to Scrape'
         required: true
-        default: 'https://modxcomputers.com/product-category/pc-components'
+        default: 'https://modxcomputers.com/product-category/pc-components/processor/'
   
-  # Agar auto-update chahiye toh time set kar sakte ho (e.g., daily midnight)
   schedule:
     - cron: '0 0 * * *' 
 
@@ -39,21 +38,32 @@ jobs:
           from bs4 import BeautifulSoup
           
           target_url = os.environ.get('TARGET_URL')
-          headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+          
+          # Upgraded headers to bypass basic anti-bot systems
+          headers = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Referer': 'https://www.google.com/'
+          }
           
           print(f'Fetching data from: {target_url}')
           response = requests.get(target_url, headers=headers)
           
           if response.status_code == 200:
+              print(f'Page Fetched! HTML Length: {len(response.text)} bytes')
               soup = BeautifulSoup(response.text, 'html.parser')
               products_data = []
               
-              # Finding product blocks
-              for item in soup.find_all(['li', 'div'], class_=['product', 'type-product']):
-                  title_tag = item.find(['h2', 'h3'])
+              # Upgraded WooCommerce CSS Selectors
+              product_blocks = soup.select('.product, .type-product, li.product')
+              print(f'Found {len(product_blocks)} product block(s) on the page.')
+              
+              for item in product_blocks:
+                  title_tag = item.select_one('.woocommerce-loop-product__title, h2, h3')
                   name = title_tag.text.strip() if title_tag else 'N/A'
                   
-                  price_span = item.find('span', class_='price')
+                  price_span = item.select_one('.price')
                   mrp, sale_price = 'N/A', 'N/A'
                   
                   if price_span:
@@ -68,7 +78,9 @@ jobs:
                   if name != 'N/A':
                       products_data.append([name, mrp, sale_price])
               
-              # Writing to CSV
+              if len(products_data) == 0:
+                  print('WARNING: 0 products extracted. E-commerce site might be blocking GitHub Actions IP or loading products via JavaScript.')
+              
               with open('products_list.csv', 'w', newline='', encoding='utf-8') as f:
                   writer = csv.writer(f)
                   writer.writerow(['Product Name', 'MRP', 'Sale Price'])
@@ -76,7 +88,7 @@ jobs:
                   
               print(f'Success! {len(products_data)} products saved to products_list.csv')
           else:
-              print(f'Failed to fetch. Status: {response.status_code}')
+              print(f'Failed to fetch. HTTP Status: {response.status_code}')
           "
 
       - name: Commit and Push CSV
@@ -84,6 +96,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add products_list.csv
-          # Check if there are changes before committing
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated products CSV with new data"
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated products CSV"
           git push
