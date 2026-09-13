@@ -6,7 +6,7 @@ on:
       url:
         description: 'Target Website URL to Scrape'
         required: true
-        default: 'https://modxcomputers.com/product-category/pc-components/processor/'
+        default: 'https://modxcomputers.com/product-category/pc-components'
   
   schedule:
     - cron: '0 0 * * *' 
