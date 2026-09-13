@@ -1,0 +1,89 @@
+name: Single-File Dynamic Product Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Target Website URL to Scrape'
+        required: true
+        default: 'https://modxcomputers.com/product-category/pc-components'
+  
+  # Agar auto-update chahiye toh time set kar sakte ho (e.g., daily midnight)
+  schedule:
+    - cron: '0 0 * * *' 
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run Inline Scraper
+        env:
+          TARGET_URL: ${{ github.event.inputs.url || 'https://modxcomputers.com/product-category/pc-components/processor/' }}
+        run: |
+          python -c "
+          import os, requests, csv
+          from bs4 import BeautifulSoup
+          
+          target_url = os.environ.get('TARGET_URL')
+          headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+          
+          print(f'Fetching data from: {target_url}')
+          response = requests.get(target_url, headers=headers)
+          
+          if response.status_code == 200:
+              soup = BeautifulSoup(response.text, 'html.parser')
+              products_data = []
+              
+              # Finding product blocks
+              for item in soup.find_all(['li', 'div'], class_=['product', 'type-product']):
+                  title_tag = item.find(['h2', 'h3'])
+                  name = title_tag.text.strip() if title_tag else 'N/A'
+                  
+                  price_span = item.find('span', class_='price')
+                  mrp, sale_price = 'N/A', 'N/A'
+                  
+                  if price_span:
+                      del_tag = price_span.find('del')
+                      ins_tag = price_span.find('ins')
+                      if del_tag and ins_tag:
+                          mrp = del_tag.text.strip()
+                          sale_price = ins_tag.text.strip()
+                      else:
+                          sale_price = price_span.text.strip()
+                  
+                  if name != 'N/A':
+                      products_data.append([name, mrp, sale_price])
+              
+              # Writing to CSV
+              with open('products_list.csv', 'w', newline='', encoding='utf-8') as f:
+                  writer = csv.writer(f)
+                  writer.writerow(['Product Name', 'MRP', 'Sale Price'])
+                  writer.writerows(products_data)
+                  
+              print(f'Success! {len(products_data)} products saved to products_list.csv')
+          else:
+              print(f'Failed to fetch. Status: {response.status_code}')
+          "
+
+      - name: Commit and Push CSV
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add products_list.csv
+          # Check if there are changes before committing
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-updated products CSV with new data"
+          git push
