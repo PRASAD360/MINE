@@ -47,7 +47,7 @@ PROCESSOR,AMD Ryzen 7 9800X3D OEM Tray Processor (3 Years Waranty),N/A,₹45990
 PROCESSOR,AMD Ryzen 7 9800X3D Processor,N/A,₹49190
 PROCESSOR,Intel Core Ultra 9 285K Processor,N/A,₹61490
 PROCESSOR,AMD Ryzen 9 9950X3D Processor,N/A,₹72290
-PROCESSOR,Make Your Processor Shopping Easy with ModxComputers,N/A,₹48000
+PROCESSOR,Make Your Processor Shopping Easy with ModxComputers,N/A,₹49990
 MOTHERBOARD,Gigabyte B450M K Motherboard,N/A,₹6690
 MOTHERBOARD,MSI PRO B760M-E DDR4 Motherboard,N/A,₹8490
 MOTHERBOARD,MSI PRO B760M-E (DDR5) Motherboard,N/A,₹8990
@@ -117,7 +117,7 @@ CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Dis
 CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (White),N/A,₹16490
 CPU COOLER,NZXT Kraken Plus 360 RGB with LCD Display Liquid Cooler (Black),N/A,₹19390
 CPU COOLER,NZXT Kraken Elite 420 RGB with IPS LCD Display Liquid Cooler (Black),N/A,₹29990
-CPU COOLER,CPU Coolers at ModxComputers,N/A,₹60000
+CPU COOLER,CPU Coolers at ModxComputers,N/A,₹42990
 RAM,TeamGroup T-Force Vulcan Z 8GB (8GBx1) DDR4 CL16 3200MHz RAM (Gray),N/A,₹6990
 RAM,G.Skill Ripjaws V 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Black),N/A,₹12990
 RAM,TeamGroup T-Force Vulcan Z 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Red),N/A,₹12990
@@ -139,7 +139,7 @@ RAM,Acer Predator Vesta II RGB 32GB (16GBx2) DDR5 CL36 6000MHz RAM (Black),N/A,�
 RAM,TeamGroup T-Create Expert 32GB (16GBx2) DDR5 CL30 6000MHz RAM (White),N/A,₹64990
 RAM,TeamGroup T-Force Delta RGB 32GB (16GBx2) DDR5 CL30 6000MHz RAM (White),N/A,₹66990
 RAM,Corsair Vengeance 48GB (24GBx2) DDR5 CL38 5200MHz RAM (Black),N/A,₹69990
-RAM,Top-Notch RAMs at ModxComputers,N/A,₹5000
+RAM,Top-Notch RAMs at ModxComputers,N/A,₹30990
 GRAPHICS CARD,ASUS Dual RX 7600 OC Edition 8GB Graphics Card,N/A,₹34490
 GRAPHICS CARD,Gigabyte RX 7600 Gaming OC 8GB Graphics Card,N/A,₹35490
 GRAPHICS CARD,Inno3D RTX 5050 Twin X2 GDDR6 Graphics Card,N/A,₹36290
@@ -209,7 +209,7 @@ POWER SUPPLY,Cooler Master MWE Gold 750 V2 ATX 3.1 750 Watt 80 Plus Gold Fully M
 POWER SUPPLY,MSI MAG A750GL PCIE 5.1 ATX 3.1 750 Watt 80 Plus Gold Fully Modular Power Supply,N/A,₹8990
 POWER SUPPLY,Cooler Master MWE 1250 V2 ATX 3.1 1250 Watt 80 Plus Gold Fully Modular,N/A,₹19990
 POWER SUPPLY,Gigabyte UD1300GM PG5 ATX 3.0 1300 Watts 80 Plus Gold Fully Modular,N/A,₹21490
-POWER SUPPLY,PSUs at ModxComputers,N/A,₹65000
+POWER SUPPLY,PSUs at ModxComputers,N/A,₹58990
 CABINETS,Ant Value CV100 (Black) Cabinet,N/A,₹2690
 CABINETS,TAG Gamerz EVA  3 ARGB Fans  M-ATX Cabinet (White),N/A,₹2790
 CABINETS,Ant Value CV100 (White) Cabinet,N/A,₹2890
@@ -246,7 +246,7 @@ CABINETS,TAG Gamerz Aurora-Mesh  6 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,
 CABINETS,Antec CX700 ARGB Cabinet (Black),N/A,₹5990
 CABINETS,Ant Esports Crystal ARGB Cabinet (White),N/A,₹5990
 CABINETS,MSI MAG Vampiric 300R  ATX Mid-Tower Cabinet (Midnight Green),N/A,₹5990
-CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹16000
+CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹8990
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
 CASE FANS,Ant Esports Spectraflow ARGB (Triple Pack) (Black),N/A,₹2090
 CASE FANS,Ant Esports Spectraflow ARGB (Triple Pack) (White),N/A,₹2290
@@ -258,7 +258,7 @@ CASE FANS,Antec Connect 120 Reverse ARGB 120mm White (Triple Pack) Case Fans,N/A
 CASE FANS,Lian Li UNI Fan CL Wireless 120 Reverse Blade (Triple Pack) (Black),N/A,₹5290
 CASE FANS,NZXT F120 RGB Core 120mm Cabinet Fans (Triple Pack) (White) Case Fans,N/A,₹6390
 CASE FANS,Lian Li UNI Fan SL Wireless 120 ARGB (Triple Pack) (White),N/A,₹8990
-CASE FANS,Case Fans at ModxComputers,N/A,₹12000
+CASE FANS,Case Fans at ModxComputers,N/A,₹10490
 CUSTOM CABLES,Lian Li Strimer Wireless (12+4) 16 Pin (12 Light Guide) GPU ARGB Extension Cable,N/A,₹7990
 CUSTOM CABLES,Lian Li Strimer Wireless 24 Pin Motherboard ARGB Extension Cable,N/A,₹9990
 CUSTOM CABLES,Custom Cables at ModxComputers,N/A,₹1190
@@ -314,7 +314,7 @@ MONITOR,MSI MPG 341CQPX QD-OLED | 34 Inch Curved 1440p UWQHD (2K) 240Hz OLED 0.0
 MONITOR,Gigabyte AORUS CO49DQ OLED | 49 Inch 1800R Curved 1440p D-QHD (2K) 144Hz OLED 0.03ms Monitor,N/A,₹93490
 MONITOR,Selecting Your Gaming Monitor,N/A,₹12990
 KEYBOARD,TAG Gamerz Commander 2.0 RGB Gaming Keyboard and Mouse Combo (White),N/A,₹990
-KEYBOARD,Cosmic Byte DragonFly Gaming Keyboard and Mouse Combo,N/A,₹1390
+KEYBOARD,Cosmic Byte DragonFly Gaming Keyboard and Mouse Combo,N/A,₹1490
 KEYBOARD,Cosmic Byte Pandora TKL (CB-GK-26) Red Switches Mechanical Keyboard,N/A,₹1590
 KEYBOARD,Cosmic Byte Pandora TKL (CB-GK-25) Blue Switches Mechanical Keyboard,N/A,₹1590
 KEYBOARD,Ant Esports MK1850 Hot-Swap Mechanical Wired Gaming Keyboard (Red Switches) (Black),N/A,₹1750
