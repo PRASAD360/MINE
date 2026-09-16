@@ -36,9 +36,9 @@ PROCESSOR,AMD Ryzen 7 5700X OEM Tray Processor (3 Years Waranty),N/A,₹17990
 PROCESSOR,AMD Ryzen 5 7600X Processor,N/A,₹18290
 PROCESSOR,Intel Core Ultra 5 225 Processor,N/A,₹20490
 PROCESSOR,Intel Core I5-14400 Intel Processor,N/A,₹23490
+PROCESSOR,Intel Core Ultra 5 250K Plus Processor,N/A,₹25990
 PROCESSOR,AMD Ryzen 7 9700X OEM Tray Processor (3 Years Waranty),N/A,₹27990
 PROCESSOR,AMD Ryzen 7 7700X Processor,N/A,₹27990
-PROCESSOR,Intel Core Ultra 5 250K Plus Processor,N/A,₹27990
 PROCESSOR,AMD Ryzen 7 9700X Processor,N/A,₹30990
 PROCESSOR,Intel Core Ultra 7 270K Plus Processor,N/A,₹38490
 PROCESSOR,AMD Ryzen 9 9900X Processor,N/A,₹40990
@@ -72,6 +72,28 @@ MOTHERBOARD,Gigabyte B850 Gaming X WIFI6E Motherboard,N/A,₹18990
 MOTHERBOARD,MSI B850M Gaming Plus WIFI Motherboard,N/A,₹19890
 MOTHERBOARD,Gigabyte Z790 Eagle AX (DDR5) (WIFI) Motherboard,N/A,₹19990
 MOTHERBOARD,Gigabyte B850M Aorus Elite WIFI6E Motherboard,N/A,₹20490
+MOTHERBOARD,MSI B850 Gaming Plus WIFI Motherboard,N/A,₹21190
+MOTHERBOARD,MSI PRO X870E-S EVO WIFI Motherboard,N/A,₹21990
+MOTHERBOARD,MSI PRO Z890-S WIFI6E Motherboard,N/A,₹23490
+MOTHERBOARD,MSI PRO Z890-S WIFI6E W Motherboard (White),N/A,₹23490
+MOTHERBOARD,MSI Z790 Gaming Plus WIFI (DDR5) Motherboard,N/A,₹23990
+MOTHERBOARD,Gigabyte X870M Aorus Elite WIFI7 ICE Motherboard,N/A,₹24490
+MOTHERBOARD,MSI Z890 Gaming WIFI6E Motherboard,N/A,₹25490
+MOTHERBOARD,Gigabyte B850 AORUS ELITE WIFI7 Motherboard,N/A,₹25490
+MOTHERBOARD,MSI X870E Gaming Plus WIFI Motherboard,N/A,₹25990
+MOTHERBOARD,MSI Z890 Gaming Plus WIFI6E Motherboard,N/A,₹25990
+MOTHERBOARD,Gigabyte Z890 Gaming X WIFI7 Motherboard,N/A,₹26490
+MOTHERBOARD,Gigabyte X870E Eagle X3D WIFI7 Motherboard,N/A,₹26590
+MOTHERBOARD,MSI Z890 Gaming Plus WIFI Motherboard,N/A,₹26790
+MOTHERBOARD,MSI PRO Z890-A WIFI Motherboard,N/A,₹27990
+MOTHERBOARD,MSI MPG B850 EDGE TI WIFI Motherboard,N/A,₹28490
+MOTHERBOARD,Gigabyte Z890 Aorus Elite WIFI7 Motherboard,N/A,₹33990
+MOTHERBOARD,MSI MAG X870E Tomahawk WIFI Motherboard,N/A,₹35990
+MOTHERBOARD,Gigabyte X870E Aorus Pro X3D ICE Motherboard,N/A,₹42490
+MOTHERBOARD,Gigabyte X870E AERO X3D Wood Motherboard,N/A,₹44990
+MOTHERBOARD,Gigabyte X870E AERO X3D Dark Wood Motherboard,N/A,₹44990
+MOTHERBOARD,MSI MPG X870E CARBON WIFI Motherboard,N/A,₹47990
+MOTHERBOARD,MSI MPG Z890 Carbon WIFI Motherboard,N/A,₹52990
 MOTHERBOARD,Buy Motherboards Online at ModxComputers,N/A,₹26000
 CPU COOLER,Antec A450 FRGB Air Cooler (Black),N/A,₹1590
 CPU COOLER,Cooler Master Hyper 212 Spectrum V3 ARGB Air Cooler (Black),N/A,₹1990
@@ -109,14 +131,6 @@ CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (Black),N/A,₹12490
 CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (White),N/A,₹12490
 CPU COOLER,DeepCool LM360 WH ARGB with IPS LCD Display (White),N/A,₹13490
 CPU COOLER,Lian Li Hydroshift II LCD-C 360N Fan less ARGB with IPS LCD Display Liquid Cooler (Black),N/A,₹13790
-CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (White),N/A,₹15490
-CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (Black),N/A,₹15490
-CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (Black),N/A,₹16090
-CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (White),N/A,₹16390
-CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (Black),N/A,₹16490
-CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (White),N/A,₹16490
-CPU COOLER,NZXT Kraken Plus 360 RGB with LCD Display Liquid Cooler (Black),N/A,₹19390
-CPU COOLER,NZXT Kraken Elite 420 RGB with IPS LCD Display Liquid Cooler (Black),N/A,₹29990
 CPU COOLER,CPU Coolers at ModxComputers,N/A,₹42990
 RAM,TeamGroup T-Force Vulcan Z 8GB (8GBx1) DDR4 CL16 3200MHz RAM (Gray),N/A,₹6990
 RAM,G.Skill Ripjaws V 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Black),N/A,₹12990
@@ -130,8 +144,8 @@ RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR4 CL16 3200MHz RAM (White),N/A,
 RAM,Kingston Fury Beast 16GB (16GBx1) DDR5 CL40 5200MHz RAM (Black),N/A,₹26990
 RAM,G.Skill Ripjaws S5 16GB (16GBx1) DDR5 CL40 5200MHz RAM (Black),N/A,₹26990
 RAM,Adata XPG Lancer Blade 16GB (16GBx1) DDR5 CL46 5600MHz RAM (Black),N/A,₹27490
+RAM,G.Skill Ripjaws S5 16GB (16GBx1) DDR5 CL40 5600MHz RAM (Black),N/A,₹27490
 RAM,Crucial Pro 16GB (16GBx1) DDR5 CL46 5600MHz RAM (Black),N/A,₹27590
-RAM,G.Skill Ripjaws S5 16GB (16GBx1) DDR5 CL40 5600MHz RAM (Black),N/A,₹27690
 RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹31390
 RAM,TeamGroup T-Force Vulcan 32GB (32GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹51990
 RAM,TeamGroup T-Force Delta RGB 32GB (32GBx1) DDR5 CL38 6000MHz RAM (White),N/A,₹53990
@@ -143,15 +157,15 @@ RAM,Top-Notch RAMs at ModxComputers,N/A,₹30990
 GRAPHICS CARD,ASUS Dual RX 7600 OC Edition 8GB Graphics Card,N/A,₹34490
 GRAPHICS CARD,Gigabyte RX 7600 Gaming OC 8GB Graphics Card,N/A,₹35490
 GRAPHICS CARD,Inno3D RTX 5050 Twin X2 GDDR6 Graphics Card,N/A,₹36290
+GRAPHICS CARD,MSI RTX 5050 Shadow 2X OC 8GB GDDR6 Graphics Card,N/A,₹44990
 GRAPHICS CARD,ASUS Dual RTX 5050 OC Edition 8GB GDDR6 Graphics Card,N/A,₹44990
 GRAPHICS CARD,Gigabyte RTX 5050 Windforce OC 8GB GDDR6 Graphics Card,N/A,₹44990
-GRAPHICS CARD,MSI RTX 5050 Shadow 2X OC 8GB GDDR6 Graphics Card,N/A,₹44990
 GRAPHICS CARD,Gigabyte RX 9060 XT Gaming OC 8GB GDDR6 Graphics Card,N/A,₹47990
 GRAPHICS CARD,Gigabyte RTX 3060 Windforce OC 12GB Graphics Card,N/A,₹47990
 GRAPHICS CARD,Colorful RTX 5060 Gaming DUO 8GB GDDR7 Graphics Card,N/A,₹54990
-GRAPHICS CARD,ASRock RX 9060 XT Challenger OC 16GB GDDR6 Graphics Card,N/A,₹55990
 GRAPHICS CARD,Colorful iGame RTX 5060 Ultra W DUO OC 8GB GDDR7 Graphics Card (White),N/A,₹55990
 GRAPHICS CARD,Gigabyte RTX 5060 Gaming OC 8GB GDDR7,N/A,₹56990
+GRAPHICS CARD,ASRock RX 9060 XT Challenger OC 16GB GDDR6 Graphics Card,N/A,₹56990
 GRAPHICS CARD,Galax RTX 5060 Ti (1-Click OC Classic) 8GB GDDR7 Graphics Card,N/A,₹57990
 GRAPHICS CARD,Colorful RTX 5060 Ti Gaming DUO 8GB GDDR7 Graphics Card,N/A,₹57990
 GRAPHICS CARD,MSI RTX 5060 Ti Ventus 2X OC Plus 8GB GDDR7 Graphics Card,N/A,₹59990
@@ -175,7 +189,7 @@ GRAPHICS CARD,MSI RTX 5060 Ti Gaming Trio OC 16GB GDDR7 Graphics Card,N/A,₹999
 GRAPHICS CARD,MSI RTX 5070 World of Warcraft MIDNIGHT VOID EDITION OC 12GB GDDR7 Graphics Card,N/A,₹114990
 GRAPHICS CARD,Galax RTX 5080 (1-Click OC) with RGB Lighting 16GB GDDR7 Graphics Card,N/A,₹159990
 GRAPHICS CARD,Zotac RTX 5090 Solid OC 32GB GDDR7 Graphics Card,N/A,₹664990
-GRAPHICS CARD,Graphics Card at ModxComputers,N/A,₹33990
+GRAPHICS CARD,Graphics Card at ModxComputers,N/A,₹184990
 INTERNAL SSD,Crucial E100 480GB M.2 NVMe Gen4 4700MB/s Internal SSD,N/A,₹9190
 INTERNAL SSD,Adata Legend 860 500GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹10790
 INTERNAL SSD,Adata XPG Gammix S60 512GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹10790
@@ -234,18 +248,6 @@ CABINETS,Cooler Master Elite 481 Wood ARGB (White),N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (White) Cabinet,N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (Black) Cabinet,N/A,₹4990
 CABINETS,Ant Esports 711 Air Mesh ARGB Cabinet (Black),N/A,₹4990
-CABINETS,DeepCool CG380 3F  3 ARGB Fans  M-ATX Cabinet (Black),N/A,₹4990
-CABINETS,Cooler Master Elite 690 Wood ARGB (Black),N/A,₹5190
-CABINETS,Ant Esports Zen Wood C3 (Black),N/A,₹5190
-CABINETS,Cooler Master Elite 690 Wood ARGB (White),N/A,₹5390
-CABINETS,MSI MAG Forge 320R Airflow (Black),N/A,₹5490
-CABINETS,Ant Esports Dynamic GT ARGB (Black),N/A,₹5490
-CABINETS,Ant Esports Titan FE ARGB  4 ARGB Fans  ATX Mid Tower Cabinet (Black),N/A,₹5490
-CABINETS,Ant Esports 611 Air ARGB (Black) Cabinet,N/A,₹5490
-CABINETS,TAG Gamerz Aurora-Mesh  6 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹5890
-CABINETS,Antec CX700 ARGB Cabinet (Black),N/A,₹5990
-CABINETS,Ant Esports Crystal ARGB Cabinet (White),N/A,₹5990
-CABINETS,MSI MAG Vampiric 300R  ATX Mid-Tower Cabinet (Midnight Green),N/A,₹5990
 CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹8990
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
 CASE FANS,Ant Esports Spectraflow ARGB (Triple Pack) (Black),N/A,₹2090
@@ -258,6 +260,7 @@ CASE FANS,Antec Connect 120 Reverse ARGB 120mm White (Triple Pack) Case Fans,N/A
 CASE FANS,Lian Li UNI Fan CL Wireless 120 Reverse Blade (Triple Pack) (Black),N/A,₹5290
 CASE FANS,NZXT F120 RGB Core 120mm Cabinet Fans (Triple Pack) (White) Case Fans,N/A,₹6390
 CASE FANS,Lian Li UNI Fan SL Wireless 120 ARGB (Triple Pack) (White),N/A,₹8990
+CASE FANS,Lian Li Uni Fan SL-INF Flex 120 Reverse Blade (Triple Pack) (White),N/A,₹10490
 CASE FANS,Case Fans at ModxComputers,N/A,₹10490
 CUSTOM CABLES,Lian Li Strimer Wireless (12+4) 16 Pin (12 Light Guide) GPU ARGB Extension Cable,N/A,₹7990
 CUSTOM CABLES,Lian Li Strimer Wireless 24 Pin Motherboard ARGB Extension Cable,N/A,₹9990
