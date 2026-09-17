@@ -72,28 +72,6 @@ MOTHERBOARD,Gigabyte B850 Gaming X WIFI6E Motherboard,N/A,₹18990
 MOTHERBOARD,MSI B850M Gaming Plus WIFI Motherboard,N/A,₹19890
 MOTHERBOARD,Gigabyte Z790 Eagle AX (DDR5) (WIFI) Motherboard,N/A,₹19990
 MOTHERBOARD,Gigabyte B850M Aorus Elite WIFI6E Motherboard,N/A,₹20490
-MOTHERBOARD,MSI B850 Gaming Plus WIFI Motherboard,N/A,₹21190
-MOTHERBOARD,MSI PRO X870E-S EVO WIFI Motherboard,N/A,₹21990
-MOTHERBOARD,MSI PRO Z890-S WIFI6E Motherboard,N/A,₹23490
-MOTHERBOARD,MSI PRO Z890-S WIFI6E W Motherboard (White),N/A,₹23490
-MOTHERBOARD,MSI Z790 Gaming Plus WIFI (DDR5) Motherboard,N/A,₹23990
-MOTHERBOARD,Gigabyte X870M Aorus Elite WIFI7 ICE Motherboard,N/A,₹24490
-MOTHERBOARD,MSI Z890 Gaming WIFI6E Motherboard,N/A,₹25490
-MOTHERBOARD,Gigabyte B850 AORUS ELITE WIFI7 Motherboard,N/A,₹25490
-MOTHERBOARD,MSI X870E Gaming Plus WIFI Motherboard,N/A,₹25990
-MOTHERBOARD,MSI Z890 Gaming Plus WIFI6E Motherboard,N/A,₹25990
-MOTHERBOARD,Gigabyte Z890 Gaming X WIFI7 Motherboard,N/A,₹26490
-MOTHERBOARD,Gigabyte X870E Eagle X3D WIFI7 Motherboard,N/A,₹26590
-MOTHERBOARD,MSI Z890 Gaming Plus WIFI Motherboard,N/A,₹26790
-MOTHERBOARD,MSI PRO Z890-A WIFI Motherboard,N/A,₹27990
-MOTHERBOARD,MSI MPG B850 EDGE TI WIFI Motherboard,N/A,₹28490
-MOTHERBOARD,Gigabyte Z890 Aorus Elite WIFI7 Motherboard,N/A,₹33990
-MOTHERBOARD,MSI MAG X870E Tomahawk WIFI Motherboard,N/A,₹35990
-MOTHERBOARD,Gigabyte X870E Aorus Pro X3D ICE Motherboard,N/A,₹42490
-MOTHERBOARD,Gigabyte X870E AERO X3D Wood Motherboard,N/A,₹44990
-MOTHERBOARD,Gigabyte X870E AERO X3D Dark Wood Motherboard,N/A,₹44990
-MOTHERBOARD,MSI MPG X870E CARBON WIFI Motherboard,N/A,₹47990
-MOTHERBOARD,MSI MPG Z890 Carbon WIFI Motherboard,N/A,₹52990
 MOTHERBOARD,Buy Motherboards Online at ModxComputers,N/A,₹26000
 CPU COOLER,Antec A450 FRGB Air Cooler (Black),N/A,₹1590
 CPU COOLER,Cooler Master Hyper 212 Spectrum V3 ARGB Air Cooler (Black),N/A,₹1990
@@ -131,6 +109,14 @@ CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (Black),N/A,₹12490
 CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (White),N/A,₹12490
 CPU COOLER,DeepCool LM360 WH ARGB with IPS LCD Display (White),N/A,₹13490
 CPU COOLER,Lian Li Hydroshift II LCD-C 360N Fan less ARGB with IPS LCD Display Liquid Cooler (Black),N/A,₹13790
+CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (White),N/A,₹15490
+CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (Black),N/A,₹15490
+CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (Black),N/A,₹16090
+CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (White),N/A,₹16390
+CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (Black),N/A,₹16490
+CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (White),N/A,₹16490
+CPU COOLER,NZXT Kraken Plus 360 RGB with LCD Display Liquid Cooler (Black),N/A,₹19390
+CPU COOLER,NZXT Kraken Elite 420 RGB with IPS LCD Display Liquid Cooler (Black),N/A,₹29990
 CPU COOLER,CPU Coolers at ModxComputers,N/A,₹42990
 RAM,TeamGroup T-Force Vulcan Z 8GB (8GBx1) DDR4 CL16 3200MHz RAM (Gray),N/A,₹6990
 RAM,G.Skill Ripjaws V 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Black),N/A,₹12990
@@ -143,9 +129,9 @@ RAM,Corsair Vengeance RGB 8GB (8GBx1) DDR5 CL40 5200MHz RAM (Black),N/A,₹14490
 RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR4 CL16 3200MHz RAM (White),N/A,₹14990
 RAM,Kingston Fury Beast 16GB (16GBx1) DDR5 CL40 5200MHz RAM (Black),N/A,₹26990
 RAM,G.Skill Ripjaws S5 16GB (16GBx1) DDR5 CL40 5200MHz RAM (Black),N/A,₹26990
+RAM,Crucial Pro 16GB (16GBx1) DDR5 CL46 5600MHz RAM (Black),N/A,₹27190
 RAM,Adata XPG Lancer Blade 16GB (16GBx1) DDR5 CL46 5600MHz RAM (Black),N/A,₹27490
 RAM,G.Skill Ripjaws S5 16GB (16GBx1) DDR5 CL40 5600MHz RAM (Black),N/A,₹27490
-RAM,Crucial Pro 16GB (16GBx1) DDR5 CL46 5600MHz RAM (Black),N/A,₹27590
 RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹31390
 RAM,TeamGroup T-Force Vulcan 32GB (32GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹51990
 RAM,TeamGroup T-Force Delta RGB 32GB (32GBx1) DDR5 CL38 6000MHz RAM (White),N/A,₹53990
@@ -195,11 +181,11 @@ INTERNAL SSD,Adata Legend 860 500GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹1
 INTERNAL SSD,Adata XPG Gammix S60 512GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹10790
 INTERNAL SSD,Patriot 1TB P400 Lite M.2 NVMe Gen4 3500MB/s Internal SSD,N/A,₹16390
 INTERNAL SSD,Adata XPG Gammix S60 1TB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹17490
-INTERNAL SSD,Crucial P310 1TB with Heatsink M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17990
+INTERNAL SSD,Crucial P310 1TB with Heatsink M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17490
 INTERNAL SSD,Western Digital Blue SN5100 1TB M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17990
 INTERNAL SSD,Acer Predator GM7 1TB M.2 NVMe Gen4 7400MB/s Internal SSD,N/A,₹17990
 INTERNAL SSD,Gigabyte Aorus 7000E 1TB M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17990
-INTERNAL SSD,Western Digital Black SN7100 1TB M.2 NVMe Gen4 7250MB/s Internal SSD,N/A,₹18990
+INTERNAL SSD,Western Digital Black SN7100 1TB M.2 NVMe Gen4 7250MB/s Internal SSD,N/A,₹18090
 INTERNAL SSD,Crucial P510 1TB M.2 NVMe Gen5 11000MB/s Internal SSD,N/A,₹19990
 INTERNAL SSD,Crucial P510 1TB M.2 NVMe Gen5 11000MB/s with Heatsink Internal SSD,N/A,₹20490
 INTERNAL SSD,Kioxia Exceria Plus G4 1TB M.2 NVMe Gen5 10000MB/s Internal SSD,N/A,₹21990
@@ -233,8 +219,8 @@ CABINETS,MSI PAG SHIELD M500A  4 Auto RGB Fans  M-ATX Mini-Tower Cabinet (Black)
 CABINETS,MSI PRO FORGE M051A  4 Auto-RGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹3690
 CABINETS,TAG Gamerz Starlight  3 ARGB Fans  M-ATX Cabinet (White),N/A,₹3790
 CABINETS,Ant Esports Box C Air V2  1 ARGB Fan  M-ATX Mini Tower Portable Cabinet (Black),N/A,₹3990
-CABINETS,MSI MAG Forge 120A Airflow (Black),N/A,₹3990
 CABINETS,MSI PRO FORGE M051R  4 ARGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹3990
+CABINETS,MSI MAG Forge 120A Airflow Cabinet (Black),N/A,₹4290
 CABINETS,Cooler Master Elite 490 ARGB (Black),N/A,₹4390
 CABINETS,Ant Esports Zen Air 360 ARGB ATX Cabinet (Black),N/A,₹4490
 CABINETS,TAG Gamerz Nebula  3 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹4490
@@ -248,6 +234,18 @@ CABINETS,Cooler Master Elite 481 Wood ARGB (White),N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (White) Cabinet,N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (Black) Cabinet,N/A,₹4990
 CABINETS,Ant Esports 711 Air Mesh ARGB Cabinet (Black),N/A,₹4990
+CABINETS,DeepCool CG380 3F  3 ARGB Fans  M-ATX Cabinet (Black),N/A,₹4990
+CABINETS,Cooler Master Elite 690 Wood ARGB (Black),N/A,₹5190
+CABINETS,Ant Esports Zen Wood C3 (Black),N/A,₹5190
+CABINETS,Cooler Master Elite 690 Wood ARGB (White),N/A,₹5390
+CABINETS,MSI MAG Forge 320R Airflow (Black),N/A,₹5490
+CABINETS,Ant Esports Dynamic GT ARGB (Black),N/A,₹5490
+CABINETS,Ant Esports Titan FE ARGB  4 ARGB Fans  ATX Mid Tower Cabinet (Black),N/A,₹5490
+CABINETS,Ant Esports 611 Air ARGB (Black) Cabinet,N/A,₹5490
+CABINETS,TAG Gamerz Aurora-Mesh  6 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹5890
+CABINETS,Antec CX700 ARGB Cabinet (Black),N/A,₹5990
+CABINETS,Ant Esports Crystal ARGB Cabinet (White),N/A,₹5990
+CABINETS,MSI MAG Vampiric 300R  ATX Mid-Tower Cabinet (Midnight Green),N/A,₹5990
 CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹8990
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
 CASE FANS,Ant Esports Spectraflow ARGB (Triple Pack) (Black),N/A,₹2090
@@ -332,4 +330,4 @@ KEYBOARD,Cosmic Byte Phantom TKL Gasket (CB-GK-43) Mechanical Wired Swappable Ke
 KEYBOARD,Cosmic Byte Phantom TKL Gasket (CB-GK-42) Mechanical Wired Swappable Keyboard with PreLubed Switches (White),N/A,₹3090
 KEYBOARD,Cosmic Byte Trinity (CB-GK-39) Optical Swappable Blue Switches Mechanical Keyboard (Wireless) Keyboard,N/A,₹3890
 KEYBOARD,Logitech G915 X Wired Low-Profile Mechanical Gaming Keyboard (GL Switches) (Black),N/A,₹13990
-KEYBOARD,FAQs on Keyboard,N/A,₹7000
+KEYBOARD,FAQs on Keyboard,N/A,₹6500
