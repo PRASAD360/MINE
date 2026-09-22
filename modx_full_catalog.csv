@@ -36,7 +36,7 @@ PROCESSOR,AMD Ryzen 7 5700X OEM Tray Processor (3 Years Waranty),N/A,₹17990
 PROCESSOR,AMD Ryzen 5 7600X Processor,N/A,₹18290
 PROCESSOR,Intel Core Ultra 5 225 Processor,N/A,₹20490
 PROCESSOR,Intel Core I5-14400 Intel Processor,N/A,₹23490
-PROCESSOR,Intel Core Ultra 5 250K Plus Processor,N/A,₹25990
+PROCESSOR,Intel Core Ultra 5 250K Plus Processor,N/A,₹26990
 PROCESSOR,AMD Ryzen 7 9700X OEM Tray Processor (3 Years Waranty),N/A,₹27990
 PROCESSOR,AMD Ryzen 7 7700X Processor,N/A,₹27990
 PROCESSOR,AMD Ryzen 7 9700X Processor,N/A,₹30990
@@ -95,10 +95,8 @@ MOTHERBOARD,Gigabyte X870E AERO X3D Dark Wood Motherboard,N/A,₹44990
 MOTHERBOARD,MSI MPG X870E CARBON WIFI Motherboard,N/A,₹47990
 MOTHERBOARD,MSI MPG Z890 Carbon WIFI Motherboard,N/A,₹52990
 MOTHERBOARD,Buy Motherboards Online at ModxComputers,N/A,₹26000
-CPU COOLER,Antec A450 FRGB Air Cooler (Black),N/A,₹1590
 CPU COOLER,Cooler Master Hyper 212 Spectrum V3 ARGB Air Cooler (Black),N/A,₹1990
 CPU COOLER,MSI MAG CoreFrozr AA13 Air Cooler (White),N/A,₹2190
-CPU COOLER,Cooler Master Hyper 620S ARGB Air Cooler (Black),N/A,₹3390
 CPU COOLER,Arctic Freezer 36 CO Air Cooler (Black),N/A,₹3490
 CPU COOLER,Cooler Master Hyper 212 Halo ARGB (Black),N/A,₹3590
 CPU COOLER,KingCool Iron Wind ARGB Air Cooler (White),N/A,₹3690
@@ -131,14 +129,8 @@ CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (Black),N/A,₹12490
 CPU COOLER,MSI MAG Coreliquid I360 ARGB Liquid Cooler (White),N/A,₹12490
 CPU COOLER,DeepCool LM360 WH ARGB with IPS LCD Display (White),N/A,₹13490
 CPU COOLER,Lian Li Hydroshift II LCD-C 360N Fan less ARGB with IPS LCD Display Liquid Cooler (Black),N/A,₹13790
-CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (White),N/A,₹15490
 CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (Black),N/A,₹15490
-CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (Black),N/A,₹16090
-CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (White),N/A,₹16390
-CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (Black),N/A,₹16490
-CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (White),N/A,₹16490
-CPU COOLER,NZXT Kraken Plus 360 RGB with LCD Display Liquid Cooler (Black),N/A,₹19390
-CPU COOLER,NZXT Kraken Elite 420 RGB with IPS LCD Display Liquid Cooler (Black),N/A,₹29990
+CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (White),N/A,₹15490
 CPU COOLER,CPU Coolers at ModxComputers,N/A,₹42990
 RAM,G.Skill Ripjaws V 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Black),N/A,₹12990
 RAM,Adata XPG Gammix D35 16GB (16GBx1) DDR4 CL16 3200MHz RAM (Black),N/A,₹12990
@@ -194,7 +186,6 @@ GRAPHICS CARD,Gigabyte RTX 5070 Eagle OC SFF 12GB GDDR7 Graphics Card,N/A,₹999
 GRAPHICS CARD,MSI RTX 5060 Ti Gaming Trio OC 16GB GDDR7 Graphics Card,N/A,₹99990
 GRAPHICS CARD,MSI RTX 5070 World of Warcraft MIDNIGHT VOID EDITION OC 12GB GDDR7 Graphics Card,N/A,₹114990
 GRAPHICS CARD,Galax RTX 5080 (1-Click OC) with RGB Lighting 16GB GDDR7 Graphics Card,N/A,₹159990
-GRAPHICS CARD,Zotac RTX 5090 Solid OC 32GB GDDR7 Graphics Card,N/A,₹664990
 GRAPHICS CARD,Graphics Card at ModxComputers,N/A,₹184990
 INTERNAL SSD,Crucial E100 480GB M.2 NVMe Gen4 4700MB/s Internal SSD,N/A,₹9190
 INTERNAL SSD,Adata Legend 860 500GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹10790
@@ -225,7 +216,6 @@ POWER SUPPLY,MSI MAG A550BN 550 Watt 80 Plus Bronze Power Supply,N/A,₹4190
 POWER SUPPLY,MSI MAG A650BN 650 Watt 80 Plus Bronze Power Supply,N/A,₹4590
 POWER SUPPLY,Gigabyte P650SS ATX 3.0 650 Watt 80 Plus Silver Power Supply,N/A,₹4990
 POWER SUPPLY,Corsair CX750 750 Watt 80 Plus Bronze Power Supply,N/A,₹6490
-POWER SUPPLY,Cooler Master MWE Gold 750 V2 ATX 3.1 750 Watt 80 Plus Gold Fully Modular Power Supply,N/A,₹8990
 POWER SUPPLY,MSI MAG A750GL PCIE 5.1 ATX 3.1 750 Watt 80 Plus Gold Fully Modular Power Supply,N/A,₹8990
 POWER SUPPLY,Cooler Master MWE 1250 V2 ATX 3.1 1250 Watt 80 Plus Gold Fully Modular,N/A,₹19990
 POWER SUPPLY,Gigabyte UD1300GM PG5 ATX 3.0 1300 Watts 80 Plus Gold Fully Modular,N/A,₹21490
@@ -242,9 +232,9 @@ CABINETS,MSI PRO FORGE M051R  4 ARGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,
 CABINETS,MSI MAG Forge 120A Airflow Cabinet (Black),N/A,₹4290
 CABINETS,Cooler Master Elite 490 ARGB (Black),N/A,₹4390
 CABINETS,Ant Esports Zen Air 360 ARGB ATX Cabinet (Black),N/A,₹4490
-CABINETS,TAG Gamerz Nebula  3 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹4490
 CABINETS,DeepCool CG330 3F ARGB Cabinet (Black),N/A,₹4490
-CABINETS,TAG Gamerz Nebula  3 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹4490
+CABINETS,TAG Gamerz Nebula  4 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹4490
+CABINETS,TAG Gamerz Nebula  4 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹4490
 CABINETS,Ant Esports 411 Air ARGB (Black) Cabinet,N/A,₹4790
 CABINETS,Cooler Master Elite 481 Wood ARGB (Black),N/A,₹4790
 CABINETS,Ant Esports Titan Core 360  4 ARGB Fans  E-ATX Mid Tower Cabinet (Black),N/A,₹4890
@@ -252,8 +242,43 @@ CABINETS,Ant Esports ICE-410TG ARGB Cabinet (Black),N/A,₹4890
 CABINETS,Cooler Master Elite 481 Wood ARGB (White),N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (White) Cabinet,N/A,₹4990
 CABINETS,Ant Esports Crystal X3 LCD ARGB (Black) Cabinet,N/A,₹4990
-CABINETS,Ant Esports 711 Air Mesh ARGB Cabinet (Black),N/A,₹4990
 CABINETS,DeepCool CG380 3F  3 ARGB Fans  M-ATX Cabinet (Black),N/A,₹4990
+CABINETS,Ant Esports Zen Wood C3 (Black),N/A,₹5190
+CABINETS,Cooler Master Elite 690 Wood ARGB (White),N/A,₹5390
+CABINETS,Ant Esports Dynamic GT ARGB (Black),N/A,₹5490
+CABINETS,MSI MAG Forge 320R Airflow (Black),N/A,₹5490
+CABINETS,Ant Esports Titan FE ARGB  4 ARGB Fans  ATX Mid Tower Cabinet (Black),N/A,₹5490
+CABINETS,Ant Esports 611 Air ARGB (Black) Cabinet,N/A,₹5490
+CABINETS,TAG Gamerz Aurora-Mesh  6 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹5890
+CABINETS,Ant Esports Crystal ARGB Cabinet (White),N/A,₹5990
+CABINETS,Antec CX700 ARGB Cabinet (Black),N/A,₹5990
+CABINETS,MSI MAG Vampiric 300R  ATX Mid-Tower Cabinet (Midnight Green),N/A,₹5990
+CABINETS,Zotac Gaming Alloy  3 Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹6290
+CABINETS,Zotac Gaming Alloy  3 Fans  M-ATX Mini-Tower Cabinet (White),N/A,₹6290
+CABINETS,Ant Esports Crystal X6 ARGB Cabinet (Black),N/A,₹6590
+CABINETS,Ant Esports Crystal Mirror ARGB (Black) Cabinet,N/A,₹6890
+CABINETS,DeepCool CG530 4F ARGB (Black) Cabinet,N/A,₹6990
+CABINETS,TAG Gamerz Orion  7 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹6990
+CABINETS,Ant Esports Crystal Mirror ARGB (White) Cabinet,N/A,₹6990
+CABINETS,TAG Gamerz Orion  7 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹6990
+CABINETS,Ant Esports Crystal ARC ARGB (Black) Cabinet,N/A,₹7490
+CABINETS,Ant Esports Crystal ARC ARGB (White) Cabinet,N/A,₹7590
+CABINETS,Ant Esports Crystal X11 ARGB ATX Cabinet (Black),N/A,₹7890
+CABINETS,DeepCool CG580 4F WH ARGB Cabinet (White),N/A,₹7990
+CABINETS,Antec C3 ARGB with 4 Fans ATX Cabinet (White),N/A,₹7990
+CABINETS,Lian Li Vector V100 ARGB Cabinet (White),N/A,₹7990
+CABINETS,Lian Li A3-mATX  Mesh Panel  M-ATX Mini-Tower Cabinet (White),N/A,₹8290
+CABINETS,Lian Li A3-mATX  Mesh Panel  M-ATX Mini-Tower Cabinet (Black),N/A,₹8290
+CABINETS,MSI MAG PANO M100R PZ ARGB (Black),N/A,₹8490
+CABINETS,MSI MAG PANO M100R PZ ARGB (White) Cabinet,N/A,₹8490
+CABINETS,Lian Li Lancool 207 ARGB Cabinet (White),N/A,₹8790
+CABINETS,Lian Li Lancool 207 ARGB Cabinet (Black),N/A,₹8790
+CABINETS,Cooler Master Elite 600 with 7 ARGB Fans (White),N/A,₹8990
+CABINETS,Lian Li Vector V150 INF  3 INF ARGB Fans  M-ATX Mid-Tower Cabinet (Black),N/A,₹9290
+CABINETS,Corsair 3500X ARGB (White) Cabinet,N/A,₹9290
+CABINETS,Antec C5 Curve ARGB with 4 Fans ATX Cabinet (White),N/A,₹9790
+CABINETS,DeepCool CH780 ARGB ATX Cabinet (White),N/A,₹9990
+CABINETS,Lian Li Lancool 216 ARGB Cabinet (White),N/A,₹9990
 CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹8990
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
 CASE FANS,Ant Esports Spectraflow ARGB (Triple Pack) (Black),N/A,₹2090
