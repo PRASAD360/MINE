@@ -39,16 +39,17 @@ PROCESSOR,AMD Ryzen 5 7600X Processor,N/A,₹18290
 PROCESSOR,AMD Ryzen 5 8600G Processor,N/A,₹19490
 PROCESSOR,Intel Core Ultra 5 225 Processor,N/A,₹20490
 PROCESSOR,AMD Ryzen 5 9600X Processor,N/A,₹21490
+PROCESSOR,Intel Core I5-12400,N/A,₹21990
 PROCESSOR,Intel Core Ultra 5 245K Processor,N/A,₹23290
 PROCESSOR,Intel Core I5-14400 Intel Processor,N/A,₹23490
 PROCESSOR,Intel Core Ultra 5 250K Plus Processor,N/A,₹26990
-PROCESSOR,AMD Ryzen 7 7700X Processor,N/A,₹27990
 PROCESSOR,AMD Ryzen 7 9700X OEM Tray Processor (3 Years Waranty),N/A,₹27990
+PROCESSOR,AMD Ryzen 7 7700X Processor,N/A,₹27990
 PROCESSOR,AMD Ryzen 7 8700G Processor,N/A,₹28890
 PROCESSOR,AMD Ryzen 7 9700X Processor,N/A,₹30990
 PROCESSOR,Intel Core I5-14600K Processor,N/A,₹32990
-PROCESSOR,Intel Core Ultra 7 265K Processor,N/A,₹33990
 PROCESSOR,AMD Ryzen 7 7800X3D OEM Tray Processor (3 Years Waranty),N/A,₹33990
+PROCESSOR,Intel Core Ultra 7 265K Processor,N/A,₹33990
 PROCESSOR,Intel Core I7-14700F Processor,N/A,₹35490
 PROCESSOR,AMD Ryzen 9 7900X Processor,N/A,₹35990
 PROCESSOR,Intel Core Ultra 7 270K Plus Processor,N/A,₹38490
@@ -88,42 +89,6 @@ MOTHERBOARD,MSI B850M Gaming Plus WIFI6E Motherboard,N/A,₹15990
 MOTHERBOARD,MSI PRO B860M-P WIFI6E Motherboard,N/A,₹15990
 MOTHERBOARD,MSI B650M Gaming Plus WIFI Motherboard,N/A,₹15990
 MOTHERBOARD,MSI B760M Gaming Plus WIFI DDR4 Motherboard,N/A,₹16790
-MOTHERBOARD,MSI PRO B860M-A WIFI6E Motherboard,N/A,₹16990
-MOTHERBOARD,Colorful CVN B850M GAMING FROZEN V14 Motherboard,N/A,₹16990
-MOTHERBOARD,Gigabyte B850 EAGLE WIFI6E Motherboard,N/A,₹17190
-MOTHERBOARD,MSI B860M Gaming Plus WIFI6E Motherboard,N/A,₹17290
-MOTHERBOARD,MSI B850 Gaming Plus WIFI6E Motherboard,N/A,₹17390
-MOTHERBOARD,Gigabyte B850M Gaming X WIFI6E Motherboard,N/A,₹17490
-MOTHERBOARD,Gigabyte B860M DS3H WIFI6E Motherboard,N/A,₹17990
-MOTHERBOARD,Gigabyte B850M Eagle WIFI6E ICE Motherboard,N/A,₹17990
-MOTHERBOARD,MSI MAG B760M Mortar WIFI II (DDR5) Motherboard,N/A,₹18490
-MOTHERBOARD,MSI PRO B850-P WIFI Motherboard,N/A,₹18490
-MOTHERBOARD,Gigabyte B850 Gaming X WIFI6E Motherboard,N/A,₹18990
-MOTHERBOARD,MSI B850M Gaming Plus WIFI Motherboard,N/A,₹19890
-MOTHERBOARD,Gigabyte Z790 Eagle AX (DDR5) (WIFI) Motherboard,N/A,₹19990
-MOTHERBOARD,Gigabyte B850M Aorus Elite WIFI6E Motherboard,N/A,₹20490
-MOTHERBOARD,MSI B850 Gaming Plus WIFI Motherboard,N/A,₹21190
-MOTHERBOARD,MSI PRO X870E-S EVO WIFI Motherboard,N/A,₹21990
-MOTHERBOARD,MSI PRO X870E-P WIFI Motherboard,N/A,₹22790
-MOTHERBOARD,MSI PRO Z890-S WIFI6E W Motherboard (White),N/A,₹23490
-MOTHERBOARD,MSI PRO Z890-S WIFI6E Motherboard,N/A,₹23490
-MOTHERBOARD,MSI MAG X870E Gaming Max WIFI Motherboard,N/A,₹23990
-MOTHERBOARD,MSI Z790 Gaming Plus WIFI (DDR5) Motherboard,N/A,₹23990
-MOTHERBOARD,MSI MAG B850 Tomahawk WIFI Motherboard,N/A,₹23990
-MOTHERBOARD,MSI MAG B850 Tomahawk Max WIFI Motherboard,N/A,₹24490
-MOTHERBOARD,Gigabyte X870M Aorus Elite WIFI7 ICE Motherboard,N/A,₹24490
-MOTHERBOARD,MSI Z890 Gaming WIFI6E Motherboard,N/A,₹25490
-MOTHERBOARD,Gigabyte B850 AORUS ELITE WIFI7 Motherboard,N/A,₹25490
-MOTHERBOARD,MSI X870E Gaming Plus WIFI Motherboard,N/A,₹25990
-MOTHERBOARD,MSI Z890 Gaming Plus WIFI6E Motherboard,N/A,₹25990
-MOTHERBOARD,Gigabyte Z890 Gaming X WIFI7 Motherboard,N/A,₹26490
-MOTHERBOARD,MSI Z890 Gaming Plus WIFI Motherboard,N/A,₹26790
-MOTHERBOARD,Gigabyte X870E Eagle X3D WIFI7 Motherboard,N/A,₹27990
-MOTHERBOARD,MSI PRO Z890-A WIFI Motherboard,N/A,₹27990
-MOTHERBOARD,MSI MPG B850 EDGE TI WIFI Motherboard,N/A,₹28490
-MOTHERBOARD,MSI MAG Z890 Tomahawk WIFI Motherboard,N/A,₹31490
-MOTHERBOARD,Gigabyte Z890 Aorus Elite WIFI7 Motherboard,N/A,₹33990
-MOTHERBOARD,MSI MAG X870E Tomahawk WIFI Motherboard,N/A,₹35990
 MOTHERBOARD,Buy Motherboards Online at ModxComputers,N/A,₹26000
 CPU COOLER,Ant Esports ICE-C400 Auto RGB Air Cooler (Black),N/A,₹1290
 CPU COOLER,Cooler Master Hyper 212 Spectrum V3 ARGB Air Cooler (Black),N/A,₹1990
@@ -135,8 +100,8 @@ CPU COOLER,Cooler Master Hyper 212 Halo ARGB (Black),N/A,₹3590
 CPU COOLER,KingCool Iron Wind ARGB Air Cooler (White),N/A,₹3690
 CPU COOLER,Arctic Freezer 36 Air Cooler (Black),N/A,₹4000
 CPU COOLER,Arctic Freezer 36 ARGB Air Cooler (Black),N/A,₹4090
-CPU COOLER,Arctic Freezer 36 ARGB Air Cooler (White),N/A,₹4290
 CPU COOLER,Ant Esports V8 Digital ARGB Air Cooler (Black),N/A,₹4290
+CPU COOLER,Arctic Freezer 36 ARGB Air Cooler (White),N/A,₹4290
 CPU COOLER,Cooler Master Hyper 212 3DHP ARGB Air Cooler (Black),N/A,₹4500
 CPU COOLER,DeepCool AK400 G2 Digital NYX Air Cooler (Black),N/A,₹4690
 CPU COOLER,DeepCool LE240 V2 ARGB Liquid Cooler (Black),N/A,₹5590
@@ -154,6 +119,8 @@ CPU COOLER,Cooler Master MasterLiquid Core Nex 360 ARGB Liquid Cooler (White),N/
 CPU COOLER,Cooler Master MasterLiquid 360 Core II ARGB Liquid Cooler (White),N/A,₹8290
 CPU COOLER,Cooler Master MasterLiquid Core Nex Digital 360 ARGB Liquid Cooler (Black),N/A,₹8590
 CPU COOLER,Cooler Master MasterLiquid Core Nex Digital 360 ARGB (White),N/A,₹8590
+CPU COOLER,Corsair Nautilus 360 RS ARGB Liquid Cooler (Black),N/A,₹8790
+CPU COOLER,Corsair Nautilus 360 RS ARGB Liquid Cooler (White),N/A,₹8990
 CPU COOLER,DeepCool LD360 ARGB with Display Liquid Cooler (Black),N/A,₹9490
 CPU COOLER,DeepCool LM360 ARGB with IPS LCD Display (Black),N/A,₹9890
 CPU COOLER,MSI MAG Coreliquid A15 360 ARGB Liquid Cooler (Black),N/A,₹9990
@@ -173,8 +140,8 @@ CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (Black)
 CPU COOLER,MSI MPG Coreliquid P13 360 with IPS LCD Display Liquid Cooler (White),N/A,₹15490
 CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (Black),N/A,₹16090
 CPU COOLER,Cooler Master MasterLiquid Atmos II 360 LCD ARGB Liquid Cooler (White),N/A,₹16390
-CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (Black),N/A,₹16490
 CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (White),N/A,₹16490
+CPU COOLER,Lian Li Hydroshift II LCD-C 360CL ARGB Liquid Cooler with IPS LCD Display (Black),N/A,₹16490
 CPU COOLER,NZXT Kraken Plus 360 RGB with LCD Display Liquid Cooler (Black),N/A,₹19390
 CPU COOLER,NZXT Kraken Elite 420 RGB with IPS LCD Display Liquid Cooler (Black),N/A,₹29990
 CPU COOLER,MSI MEG Coreliquid E15 360 with Curved 2K AMOLED Display Liquid Cooler (Black),N/A,₹42990
@@ -202,6 +169,16 @@ RAM,G.Skill Flare X5 16GB (16GBx1) DDR5 CL36 6000MHz RAM (Black),N/A,₹30990
 RAM,Patriot Viper Elite 5 RGB 16GB (16GBx1) DDR5 CL30 6000MHz RAM (White),N/A,₹30990
 RAM,Adata XPG Lancer Blade RGB 16GB (16GBx1) DDR5 CL36 6000MHz RAM (White),N/A,₹30990
 RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹31390
+RAM,TeamGroup T-Force Delta RGB 16GB (16GBx1) DDR5 CL38 6000MHz RAM (White),N/A,₹31390
+RAM,Corsair Vengeance RGB 16GB (16GBx1) DDR5 CL36 6000MHz RAM (Grey),N/A,₹32990
+RAM,TeamGroup T-Force Vulcan 32GB (32GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹51990
+RAM,TeamGroup T-Force Delta RGB 32GB (32GBx1) DDR5 CL38 6000MHz RAM (White),N/A,₹53990
+RAM,TeamGroup T-Force Delta RGB 32GB (32GBx1) DDR5 CL38 6000MHz RAM (Black),N/A,₹53990
+RAM,Acer Predator Vesta II RGB 32GB (16GBx2) DDR5 CL36 6000MHz RAM (Black),N/A,₹59990
+RAM,Patriot Viper Venom RGB 32GB (16GBx2) DDR5 CL30 6000MHz RAM (Black),N/A,₹62990
+RAM,TeamGroup T-Create Expert 32GB (16GBx2) DDR5 CL30 6000MHz RAM (White),N/A,₹64990
+RAM,TeamGroup T-Force Delta RGB 32GB (16GBx2) DDR5 CL30 6000MHz RAM (White),N/A,₹66990
+RAM,Corsair Vengeance 48GB (24GBx2) DDR5 CL38 5200MHz RAM (Black),N/A,₹69990
 RAM,Top-Notch RAMs at ModxComputers,N/A,₹30990
 GRAPHICS CARD,ASUS Dual RTX 3050 OC Edition 6GB Graphics Card,N/A,₹28990
 GRAPHICS CARD,MSI RTX 3050 Ventus 2X OC 6GB Graphics Card,N/A,₹28990
@@ -215,19 +192,17 @@ GRAPHICS CARD,MSI RTX 5050 Shadow 2X OC 8GB GDDR6 Graphics Card,N/A,₹44990
 GRAPHICS CARD,Gigabyte RX 9060 XT Gaming OC 8GB GDDR6 Graphics Card,N/A,₹47990
 GRAPHICS CARD,Colorful RTX 5060 Gaming DUO 8GB GDDR7 Graphics Card,N/A,₹54990
 GRAPHICS CARD,Colorful iGame RTX 5060 Ultra W DUO OC 8GB GDDR7 Graphics Card (White),N/A,₹55990
-GRAPHICS CARD,ASUS Dual RX 9060 XT 16GB GDDR6 Graphics Card,N/A,₹56990
-GRAPHICS CARD,Gigabyte RTX 5060 Gaming OC 8GB GDDR7,N/A,₹56990
 GRAPHICS CARD,Sapphire PULSE RX 9060 XT Gaming OC 16GB GDDR6 Graphics Card,N/A,₹56990
+GRAPHICS CARD,Gigabyte RTX 5060 Gaming OC 8GB GDDR7,N/A,₹56990
 GRAPHICS CARD,ASRock RX 9060 XT Challenger OC 16GB GDDR6 Graphics Card,N/A,₹56990
 GRAPHICS CARD,Colorful RTX 5060 Ti Gaming DUO 8GB GDDR7 Graphics Card,N/A,₹57990
 GRAPHICS CARD,Galax RTX 5060 Ti (1-Click OC Classic) 8GB GDDR7 Graphics Card,N/A,₹57990
 GRAPHICS CARD,ASUS Dual RTX 5060 Ti OC Edition 8GB GDDR7 Graphics Card,N/A,₹59990
 GRAPHICS CARD,Gigabyte RTX 5060 Ti Windforce Max OC 8GB GDDR7 Graphics Card,N/A,₹59990
+GRAPHICS CARD,MSI RTX 5060 Ti Ventus 2X OC Plus 8GB GDDR7 Graphics Card,N/A,₹59990
 GRAPHICS CARD,Zotac RTX 5060 Ti Twin Edge OC 8GB GDDR7,N/A,₹59990
 GRAPHICS CARD,MSI RTX 5060 Ti Shadow 2X OC Plus 8GB GDDR7 Graphics Card,N/A,₹59990
-GRAPHICS CARD,MSI RTX 5060 Ti Ventus 2X OC Plus 8GB GDDR7 Graphics Card,N/A,₹59990
 GRAPHICS CARD,Colorful iGame RTX 5060 Ti Ultra W DUO OC 8GB GDDR7 Graphics Card,N/A,₹60990
-GRAPHICS CARD,Gigabyte RX 9060 XT Gaming OC 16GB GDDR6 Graphics Card,N/A,₹61990
 GRAPHICS CARD,PNY RTX 5060 Ti OC RGB 8GB GDDR7 Graphics Card,N/A,₹61990
 GRAPHICS CARD,Sapphire NITRO+ RX 9060 XT OC 16GB GDDR6 Graphics Card,N/A,₹62990
 GRAPHICS CARD,ASUS Prime RX 9060 XT OC Edition 16GB GDDR6,N/A,₹64990
@@ -235,22 +210,22 @@ GRAPHICS CARD,ASRock RX 9070 Challenger 16GB GDDR6 Graphics Card,N/A,₹74990
 GRAPHICS CARD,ASRock RX 9070 XT Challenger 16GB GDDR6 Graphics Card,N/A,₹87490
 GRAPHICS CARD,Colorful RTX 5060 Ti Gaming DUO 16GB GDDR7 Graphics Card,N/A,₹88490
 GRAPHICS CARD,Galax RTX 5060 Ti (1-Click OC) 16GB GDDR7 Graphics Card,N/A,₹88990
+GRAPHICS CARD,Colorful iGame RTX 5060 Ti Ultra W DUO OC 16GB GDDR7 Graphics Card (White),N/A,₹89990
 GRAPHICS CARD,Zotac RTX 5060 Ti Twin Edge OC 16GB GDDR7 Graphics Card,N/A,₹89990
 GRAPHICS CARD,ASUS Dual RTX 5060 Ti OC Edition 16GB GDDR7 Graphics Card,N/A,₹89990
 GRAPHICS CARD,Gigabyte RTX 5060 Ti Eagle OC ICE 16GB GDDR7 Graphics Card,N/A,₹89990
-GRAPHICS CARD,Colorful iGame RTX 5060 Ti Ultra W DUO OC 16GB GDDR7 Graphics Card (White),N/A,₹89990
-GRAPHICS CARD,Gigabyte RX 9070 XT Gaming OC 16GB Graphics Card,N/A,₹90490
-GRAPHICS CARD,ASUS Prime RX 9070 XT OC Edition 16GB GDDR6 Graphics Card,N/A,₹91490
+GRAPHICS CARD,Gigabyte RX 9070 XT Gaming OC 16GB Graphics Card,N/A,₹91490
 GRAPHICS CARD,MSI RTX 5060 Ti Shadow 2X OC Plus 16GB GDDR7 Graphics Card,N/A,₹94990
 GRAPHICS CARD,Gigabyte RTX 5070 Windforce OC SFF 12G GDDR7 Graphics Card,N/A,₹97990
 GRAPHICS CARD,Gigabyte RTX 5070 Eagle OC SFF 12GB GDDR7 Graphics Card,N/A,₹99990
 GRAPHICS CARD,MSI RTX 5060 Ti Gaming Trio OC 16GB GDDR7 Graphics Card,N/A,₹99990
 GRAPHICS CARD,Gigabyte RTX 5070 Gaming OC 12GB GDDR7 Graphics Card,N/A,₹109990
 GRAPHICS CARD,MSI RTX 5070 World of Warcraft MIDNIGHT VOID EDITION OC 12GB GDDR7 Graphics Card,N/A,₹114990
-GRAPHICS CARD,Gigabyte RTX 5070 Ti Eagle OC SFF 16GB GDDR7 Graphics Card,N/A,₹149990
 GRAPHICS CARD,MSI RTX 5070 Ti Shadow 3X OC 16GB GDDR7 Graphics Card,N/A,₹149990
+GRAPHICS CARD,Gigabyte RTX 5070 Ti Eagle OC SFF 16GB GDDR7 Graphics Card,N/A,₹149990
 GRAPHICS CARD,Galax RTX 5080 (1-Click OC) with RGB Lighting 16GB GDDR7 Graphics Card,N/A,₹159990
 GRAPHICS CARD,ASUS Prime RTX 5080 EVO OC Edition 16GB GDDR7 Graphics Card,N/A,₹184990
+GRAPHICS CARD,Colorful iGame RTX 5080 Ultra W OC 16GB GDDR7 Graphics Card (White),N/A,₹184990
 GRAPHICS CARD,Graphics Card at ModxComputers,N/A,₹184990
 INTERNAL SSD,Gigabyte 240GB SATA SSD,N/A,₹4490
 INTERNAL SSD,Crucial E100 480GB M.2 NVMe Gen4 4700MB/s Internal SSD,N/A,₹9190
@@ -389,6 +364,18 @@ CABINETS,Lian Li A3-mATX Wood  Mesh Panel  M-ATX Mini-Tower Cabinet (Black),N/A,
 CABINETS,Antec C5 Curve ARGB with 4 Fans ATX Cabinet (White),N/A,₹9790
 CABINETS,Antec C8 ARGB with 3 Fans E-ATX Cabinet (White),N/A,₹9990
 CABINETS,Ant Esports Crystal XL ARGB Cabinet (White),N/A,₹9990
+CABINETS,Lian Li Lancool 216 ARGB Cabinet (White),N/A,₹9990
+CABINETS,Antec C5 ARGB with 7 Fans ATX Cabinet (Black),N/A,₹9990
+CABINETS,NZXT H5 Flow RGB 2024 Edition Cabinet (Black),N/A,₹9990
+CABINETS,DeepCool CH780 ARGB ATX Cabinet (White),N/A,₹9990
+CABINETS,DeepCool CL660 WH ATX Cabinet (White),N/A,₹10490
+CABINETS,NZXT H5 Flow RGB 2024 Edition Cabinet (White),N/A,₹10990
+CABINETS,Antec C7 ARGB with 4 Fans E-ATX Cabinet (Black),N/A,₹11390
+CABINETS,MSI MPG Velox 300R Airflow PZ (White) Cabinet,N/A,₹11490
+CABINETS,MSI MPG Velox 300R Airflow PZ (Black) Cabinet,N/A,₹11490
+CABINETS,Lian Li O11 Dynamic Mini V2 Flow Cabinet (White),N/A,₹11990
+CABINETS,Lian Li O11 Dynamic Mini V2 Flow Cabinet (Black),N/A,₹11990
+CABINETS,MSI MAG PANO 100R PZ ARGB (Black) Cabinet,N/A,₹12590
 CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹8990
 CASE FANS,Ant Esports CarbonFlow 120mm Case Fan (Single Pack) (Black),N/A,₹390
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
@@ -460,13 +447,12 @@ MONITOR,Lenovo Legion 27Q-10 OLED | 27 Inch 1440p QHD (2K) 240Hz OLED 0.03ms Mon
 MONITOR,Lenovo Legion Pro 27UD-10 OLED | 27 Inch 2160p UHD (4K) 240Hz OLED 0.03ms Monitor,N/A,₹70990
 MONITOR,MSI MAG 321UP QD-OLED | 32 Inch 2160p UHD (4K) 165Hz OLED 0.03ms Monitor,N/A,₹73490
 MONITOR,MSI MAG 341CQP QD-OLED | 34 Inch Curved 1440p UWQHD (2K) 175Hz OLED 0.03ms,N/A,₹74990
-MONITOR,MSI MPG 341CQPX QD-OLED | 34 Inch Curved 1440p UWQHD (2K) 240Hz OLED 0.03ms,N/A,₹85990
-MONITOR,Gigabyte AORUS CO49DQ OLED | 49 Inch 1800R Curved 1440p D-QHD (2K) 144Hz OLED 0.03ms Monitor,N/A,₹93490
 MONITOR,Selecting Your Gaming Monitor,N/A,₹12990
 KEYBOARD,TAG Gamerz Commander 2.0 RGB Gaming Keyboard and Mouse Combo (White),N/A,₹990
 KEYBOARD,Cosmic Byte DragonFly Gaming Keyboard and Mouse Combo,N/A,₹1490
-KEYBOARD,Cosmic Byte Pandora TKL (CB-GK-25) Blue Switches Mechanical Keyboard,N/A,₹1590
 KEYBOARD,Ant Esports MK1850 Hot-Swap Mechanical Wired Gaming Keyboard (Red Switches) (Black),N/A,₹1750
+KEYBOARD,Cosmic Byte Pandora TKL (CB-GK-25) Blue Switches Mechanical Keyboard,N/A,₹1990
+KEYBOARD,Cosmic Byte Pandora TKL (CB-GK-26) Red Switches Mechanical Keyboard,N/A,₹1990
 KEYBOARD,Cosmic Byte Firefly TKL Per Key RGB (CB-GK-16) Blue Switches Mechanical Keyboard,N/A,₹2170
 KEYBOARD,Cosmic Byte Firefly TKL Per Key RGB (CB-GK-18) Red Switches Mechanical Keyboard,N/A,₹2170
 KEYBOARD,Ant Esports MK4400 Pro Tri-Mode Wireless Mechanical RGB Gaming Keyboard (Red Switches) (Black),N/A,₹2250
