@@ -1,16 +1,15 @@
 Category,Product Name,MRP,Sale Price
 CUSTOM PC,Intel Custom PC Build,N/A,From ₹50000
 CUSTOM PC,AMD Custom PC Build,N/A,From ₹50000
-PRE BUILT PC,Kickstart 5500GT Shadow PC Build,N/A,From ₹30000
-PRE BUILT PC,Kickstart 3400G Shadow PC Build,N/A,From ₹35000
-PRE BUILT PC,Kickstart 5600GT Shadow PC Build,N/A,From ₹35000
-PRE BUILT PC,Kickstart 8600G Shadow PC Build,N/A,From ₹40000
-PRE BUILT PC,Nova R5 5500 + RTX 3050 Shadow PC Build,N/A,From ₹60000
-PRE BUILT PC,Kickstart 8500G Shadow PC Build,N/A,From ₹62000
-PRE BUILT PC,Nova R5 5500 + RX 7600 Shadow PC Build,N/A,From ₹65000
-PRE BUILT PC,Stealth R5 5600X + RTX 3050 Pro PC Build,N/A,From ₹70000
+PRE BUILT PC,Kickstart 3400G Shadow PC Build,N/A,From ₹40000
+PRE BUILT PC,Kickstart 5500GT Shadow PC Build,N/A,From ₹50000
+PRE BUILT PC,Kickstart 5600GT Shadow PC Build,N/A,From ₹52000
+PRE BUILT PC,Nova R5 5500 + RTX 3050 Shadow PC Build,N/A,From ₹65000
 PRE BUILT PC,Stealth R5 5600 + RX 7600 Pro PC Build,N/A,From ₹70000
+PRE BUILT PC,Kickstart 8500G Shadow PC Build,N/A,From ₹74000
+PRE BUILT PC,Nova R5 5500 + RX 7600 Shadow PC Build,N/A,From ₹77000
 PRE BUILT PC,Nano Portable R5 5600 + RTX 5060 Pro PC Build,N/A,From ₹80000
+PRE BUILT PC,Kickstart 8600G Shadow PC Build,N/A,From ₹87000
 PRE BUILT PC,Cyber M1 R5 9600X + RTX 5060 MSI PC Build,N/A,From ₹110000
 PRE BUILT PC,Your Ultimate Partner for Pre-Built Gaming PC India,N/A,₹40000
 GAMING PC,Strike R7 5700X + RTX 5060 Ti 16GB Shadow Gaming PC Build,N/A,From ₹50000
@@ -22,6 +21,18 @@ GAMING PC,SkullCrusher R7 5700X + RTX 5070 Shadow Gaming PC Build,N/A,From ₹13
 SPEAKER,FAQs on Speaker,N/A,₹1550
 WEBCAM,FAQs on Webcam,N/A,₹8290
 CONSOLE,Best Products,N/A,₹55990
+GAMING CHAIRS,Cybeart NEO Series Lunar Edition Gaming Chair (White/Gold),N/A,₹28490
+GAMING CHAIRS,Cybeart NEO Series Stealth Edition Gaming Chair (Black/Red),N/A,₹28490
+GAMING CHAIRS,Cybeart NEO Series Imperial Edition Gaming Chair (Black/Gold),N/A,₹28490
+GAMING CHAIRS,Cybeart NEO Series Vintage Edition Gaming Chair (Brown/Black),N/A,₹28490
+GAMING CHAIRS,Cybeart NEO Series The Lord of the Rings Gaming Chair (Black),N/A,₹33490
+GAMING CHAIRS,Cybeart NEO Series Superman Gaming Chair (Blue),N/A,₹33490
+GAMING CHAIRS,Cybeart NEO Series Batman Gaming Chair (Black),N/A,₹33490
+GAMING CHAIRS,Cybeart NEO Series Batman Classic Gaming Chair (Black),N/A,₹33490
+GAMING CHAIRS,Cybeart Apex Series Arctic Gaming Chair (White),N/A,₹42990
+GAMING CHAIRS,Cybeart Apex Series X11 Gaming Chair (Gray),N/A,₹42990
+GAMING CHAIRS,Cybeart Apex Series Vintage Gaming Chair (Brown),N/A,₹42990
+GAMING CHAIRS,Cybeart Apex Series Ghost Edition Gaming Chair (Black),N/A,₹42990
 MONITOR ARMS,MSI MPG MT201RG RGB Monitor Arm  Gas Spring  Upto 49 Inch,N/A,₹8790
 MONITOR ARMS,MSI MPG MT201DRG RGB Dual Monitor Arm  Gas Spring  Upto 35 Inch,N/A,₹12790
 PROCESSOR,AMD Ryzen 5 3400G Processor,N/A,₹8990
@@ -48,6 +59,23 @@ PROCESSOR,AMD Ryzen 7 9700X OEM Tray Processor (3 Years Waranty),N/A,₹27990
 PROCESSOR,AMD Ryzen 7 7700X Processor,N/A,₹27990
 PROCESSOR,AMD Ryzen 7 8700G Processor,N/A,₹28890
 PROCESSOR,AMD Ryzen 7 9700X Processor,N/A,₹30990
+PROCESSOR,Intel Core I5-14600K Processor,N/A,₹32990
+PROCESSOR,AMD Ryzen 7 7800X3D OEM Tray Processor (3 Years Waranty),N/A,₹33990
+PROCESSOR,Intel Core Ultra 7 265K Processor,N/A,₹33990
+PROCESSOR,Intel Core I7-14700F Processor,N/A,₹35490
+PROCESSOR,AMD Ryzen 9 7900X Processor,N/A,₹35990
+PROCESSOR,Intel Core Ultra 7 270K Plus Processor,N/A,₹38490
+PROCESSOR,AMD Ryzen 7 5800X3D Processor,N/A,₹38990
+PROCESSOR,AMD Ryzen 9 9900X Processor,N/A,₹40990
+PROCESSOR,AMD Ryzen 7 7800X3D Processor,N/A,₹41290
+PROCESSOR,AMD Ryzen 7 9800X3D OEM Tray Processor (3 Years Waranty),N/A,₹45990
+PROCESSOR,Intel Core I7-14700K Processor,N/A,₹46990
+PROCESSOR,AMD Ryzen 7 9800X3D Processor,N/A,₹49190
+PROCESSOR,Intel Core I9-14900K Processor,N/A,₹49490
+PROCESSOR,AMD Ryzen 9 9950X OEM Tray Processor (3 Years Waranty),N/A,₹49990
+PROCESSOR,AMD Ryzen 9 9950X Processor,N/A,₹60490
+PROCESSOR,Intel Core Ultra 9 285K Processor,N/A,₹61490
+PROCESSOR,AMD Ryzen 9 9950X3D Processor,N/A,₹72290
 PROCESSOR,Make Your Processor Shopping Easy with ModxComputers,N/A,₹49990
 MOTHERBOARD,MSI B450M-A PRO MAX II,N/A,₹6290
 MOTHERBOARD,Gigabyte B450M K Motherboard,N/A,₹6690
@@ -58,9 +86,9 @@ MOTHERBOARD,Gigabyte B760M H (DDR5) Motherboard,N/A,₹8990
 MOTHERBOARD,MSI PRO B550M-P WIFI6E Motherboard,N/A,₹9790
 MOTHERBOARD,Gigabyte B860M K Motherboard,N/A,₹10290
 MOTHERBOARD,MSI B550M Gaming Plus WIFI6E Motherboard,N/A,₹11490
+MOTHERBOARD,Gigabyte B650M Gaming WIFI Motherboard,N/A,₹11490
 MOTHERBOARD,Gigabyte B550M Gaming X WIFI6 Motherboard,N/A,₹11490
 MOTHERBOARD,MSI B760M Bomber WIFI DDR4 Motherboard,N/A,₹11490
-MOTHERBOARD,Gigabyte B650M Gaming WIFI Motherboard,N/A,₹11490
 MOTHERBOARD,MSI B850M Gaming WIFI Motherboard,N/A,₹13690
 MOTHERBOARD,MSI B840M Gaming Plus WIFI6E,N/A,₹13890
 MOTHERBOARD,Gigabyte B850M FORCE WIFI6E V2 Motherboard,N/A,₹13990
@@ -68,11 +96,58 @@ MOTHERBOARD,Gigabyte B860M EAGLE WIFI6 Motherboard,N/A,₹14490
 MOTHERBOARD,MSI B860M Gaming WIFI Motherboard,N/A,₹14990
 MOTHERBOARD,MSI PRO B760M-A WIFI (DDR5) Motherboard,N/A,₹15290
 MOTHERBOARD,MSI PRO B850-S WIFI6E Motherboard,N/A,₹15990
-MOTHERBOARD,MSI B650M Gaming Plus WIFI Motherboard,N/A,₹15990
+MOTHERBOARD,Gigabyte B850M Eagle WIFI6E Motherboard,N/A,₹15990
 MOTHERBOARD,MSI B850M Gaming Plus WIFI6E Motherboard,N/A,₹15990
+MOTHERBOARD,MSI B650M Gaming Plus WIFI Motherboard,N/A,₹15990
 MOTHERBOARD,MSI PRO B860M-P WIFI6E Motherboard,N/A,₹15990
 MOTHERBOARD,MSI B760M Gaming Plus WIFI DDR4 Motherboard,N/A,₹16790
 MOTHERBOARD,MSI PRO B860M-A WIFI6E Motherboard,N/A,₹16990
+MOTHERBOARD,Colorful CVN B850M GAMING FROZEN V14 Motherboard,N/A,₹16990
+MOTHERBOARD,Gigabyte B850 EAGLE WIFI6E Motherboard,N/A,₹17190
+MOTHERBOARD,MSI B860M Gaming Plus WIFI6E Motherboard,N/A,₹17290
+MOTHERBOARD,MSI B850 Gaming Plus WIFI6E Motherboard,N/A,₹17390
+MOTHERBOARD,Gigabyte B850M Gaming X WIFI6E Motherboard,N/A,₹17490
+MOTHERBOARD,Gigabyte B860M DS3H WIFI6E Motherboard,N/A,₹17990
+MOTHERBOARD,Gigabyte B850M Eagle WIFI6E ICE Motherboard,N/A,₹17990
+MOTHERBOARD,MSI MAG B760M Mortar WIFI II (DDR5) Motherboard,N/A,₹18490
+MOTHERBOARD,MSI PRO B850-P WIFI Motherboard,N/A,₹18490
+MOTHERBOARD,Gigabyte B850 Gaming X WIFI6E Motherboard,N/A,₹18990
+MOTHERBOARD,MSI B850M Gaming Plus WIFI Motherboard,N/A,₹19890
+MOTHERBOARD,Gigabyte Z790 Eagle AX (DDR5) (WIFI) Motherboard,N/A,₹19990
+MOTHERBOARD,Gigabyte B850M Aorus Elite WIFI6E Motherboard,N/A,₹20490
+MOTHERBOARD,MSI B850 Gaming Plus WIFI Motherboard,N/A,₹21190
+MOTHERBOARD,Gigabyte X870 Gaming WIFI6 Motherboard,N/A,₹21790
+MOTHERBOARD,MSI PRO X870E-S EVO WIFI Motherboard,N/A,₹21990
+MOTHERBOARD,MSI PRO X870E-P WIFI Motherboard,N/A,₹22790
+MOTHERBOARD,MSI PRO Z890-S WIFI6E W Motherboard (White),N/A,₹23490
+MOTHERBOARD,MSI PRO Z890-S WIFI6E Motherboard,N/A,₹23490
+MOTHERBOARD,MSI MAG X870E Gaming Max WIFI Motherboard,N/A,₹23990
+MOTHERBOARD,MSI Z790 Gaming Plus WIFI (DDR5) Motherboard,N/A,₹23990
+MOTHERBOARD,MSI MAG B850 Tomahawk WIFI Motherboard,N/A,₹23990
+MOTHERBOARD,Gigabyte X870E EAGLE WIFI7 Motherboard,N/A,₹24290
+MOTHERBOARD,Gigabyte X870M Aorus Elite WIFI7 ICE Motherboard,N/A,₹24490
+MOTHERBOARD,MSI MAG B850 Tomahawk Max WIFI Motherboard,N/A,₹24490
+MOTHERBOARD,Gigabyte B850 Aorus Elite WIFI7 ICE,N/A,₹24990
+MOTHERBOARD,MSI Z890 Gaming WIFI6E Motherboard,N/A,₹25490
+MOTHERBOARD,Gigabyte B850 AORUS ELITE WIFI7 Motherboard,N/A,₹25490
+MOTHERBOARD,MSI X870E Gaming Plus WIFI Motherboard,N/A,₹25990
+MOTHERBOARD,MSI Z890 Gaming Plus WIFI6E Motherboard,N/A,₹25990
+MOTHERBOARD,Gigabyte Z890 Gaming X WIFI7 Motherboard,N/A,₹26490
+MOTHERBOARD,MSI Z890 Gaming Plus WIFI Motherboard,N/A,₹26790
+MOTHERBOARD,MSI PRO Z890-A WIFI Motherboard,N/A,₹27990
+MOTHERBOARD,MSI MPG B850 EDGE TI WIFI Motherboard,N/A,₹28490
+MOTHERBOARD,Gigabyte X870E Eagle X3D WIFI7 Motherboard,N/A,₹29990
+MOTHERBOARD,MSI MAG Z890 Tomahawk WIFI Motherboard,N/A,₹31490
+MOTHERBOARD,Gigabyte Z890 Aorus Elite WIFI7 Motherboard,N/A,₹33990
+MOTHERBOARD,MSI MAG X870E Tomahawk WIFI Motherboard,N/A,₹35990
+MOTHERBOARD,Gigabyte X870E Aorus Pro X3D Motherboard,N/A,₹39490
+MOTHERBOARD,Gigabyte X870E Aorus Pro X3D ICE Motherboard,N/A,₹42490
+MOTHERBOARD,Gigabyte X870E AERO X3D Wood Motherboard,N/A,₹44990
+MOTHERBOARD,Gigabyte X870E AERO X3D Dark Wood Motherboard,N/A,₹44990
+MOTHERBOARD,MSI MPG X870E CARBON WIFI Motherboard,N/A,₹47990
+MOTHERBOARD,MSI MPG Z890 Carbon WIFI Motherboard,N/A,₹52990
+MOTHERBOARD,Gigabyte X870E Aorus Master X3D Motherboard,N/A,₹54990
+MOTHERBOARD,MSI MEG X870E ACE MAX WIFI Motherboard,N/A,₹61990
 MOTHERBOARD,Buy Motherboards Online at ModxComputers,N/A,₹24290
 CPU COOLER,Ant Esports ICE-C400 Auto RGB Air Cooler (Black),N/A,₹1290
 CPU COOLER,DeepCool AG400 G2 ARGB Air Cooler (Black),N/A,₹1890
@@ -204,24 +279,24 @@ GRAPHICS CARD,Galax RTX 5080 (1-Click OC) with RGB Lighting 16GB GDDR7 Graphics 
 GRAPHICS CARD,Colorful iGame RTX 5080 Ultra W OC 16GB GDDR7 Graphics Card (White),N/A,₹184990
 GRAPHICS CARD,Graphics Card at ModxComputers,N/A,₹146990
 INTERNAL SSD,Gigabyte 240GB SATA SSD,N/A,₹4490
+INTERNAL SSD,Hikvision E3000 512GB M.2 NVMe Gen3 3500MB/s Internal SSD,N/A,₹7490
 INTERNAL SSD,Crucial E100 480GB M.2 NVMe Gen4 4700MB/s Internal SSD,N/A,₹9190
+INTERNAL SSD,Kingston NV3 500GB M.2 NVMe Gen4 6000MB/s Internal SSD,N/A,₹10390
 INTERNAL SSD,Adata Legend 860 500GB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹10790
-INTERNAL SSD,Patriot 1TB P400 Lite M.2 NVMe Gen4 3500MB/s Internal SSD,N/A,₹16390
 INTERNAL SSD,Miphi MP500G4 1TB M.2 NVMe Gen4 5100MB/s Internal SSD,N/A,₹16390
+INTERNAL SSD,Patriot 1TB P400 Lite M.2 NVMe Gen4 3500MB/s Internal SSD,N/A,₹16390
 INTERNAL SSD,Crucial E100 1TB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹16490
 INTERNAL SSD,Crucial P310 1TB with Heatsink M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17490
 INTERNAL SSD,Adata XPG Gammix S60 1TB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹17490
 INTERNAL SSD,Gigabyte Aorus 7000E 1TB M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17990
-INTERNAL SSD,Acer Predator GM7 1TB M.2 NVMe Gen4 7400MB/s Internal SSD,N/A,₹17990
 INTERNAL SSD,Western Digital Blue SN5100 1TB M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹17990
 INTERNAL SSD,Western Digital Black SN7100 1TB M.2 NVMe Gen4 7250MB/s Internal SSD,N/A,₹18090
-INTERNAL SSD,Crucial P510 1TB M.2 NVMe Gen5 11000MB/s Internal SSD,N/A,₹19990
 INTERNAL SSD,Crucial P510 1TB M.2 NVMe Gen5 11000MB/s with Heatsink Internal SSD,N/A,₹20490
 INTERNAL SSD,Kioxia Exceria Plus G4 1TB M.2 NVMe Gen5 10000MB/s Internal SSD,N/A,₹21990
 INTERNAL SSD,Western Digital Green SN3000 2TB M.2 NVMe Gen4 5000MB/s Internal SSD,N/A,₹23990
 INTERNAL SSD,Samsung 990 EVO Plus 1TB M.2 NVMe Gen4 7150MB/s Internal SSD,N/A,₹25490
-INTERNAL SSD,Western Digital Black SN850X 1TB with Heatsink M.2 NVMe Gen4 7300MB/s Internal SSD,N/A,₹26990
 INTERNAL SSD,Samsung 990 Pro 1TB M.2 NVMe Gen4 7450MB/s Internal SSD,N/A,₹26990
+INTERNAL SSD,Western Digital Black SN850X 1TB with Heatsink M.2 NVMe Gen4 7300MB/s Internal SSD,N/A,₹26990
 INTERNAL SSD,MSI Spatium M470 PRO 2TB M.2 NVMe Gen4 6000MB/s Internal SSD,N/A,₹27490
 INTERNAL SSD,Western Digital Blue SN5100 2TB M.2 NVMe Gen4 7100MB/s Internal SSD,N/A,₹29990
 INTERNAL SSD,Samsung 9100 Pro 1TB M.2 NVMe Gen5 14700MB/s Internal SSD,N/A,₹31490
@@ -257,6 +332,64 @@ POWER SUPPLY,Cooler Master MWE 1250 V2 ATX 3.1 1250 Watt 80 Plus Gold Fully Modu
 POWER SUPPLY,MSI MAG A1250GL PCIE5 ATX 3.1 1250 Watt 80 Plus Gold Fully Modular Power Supply,N/A,₹19990
 POWER SUPPLY,Gigabyte UD1300GM PG5 ATX 3.0 1300 Watts 80 Plus Gold Fully Modular,N/A,₹21490
 POWER SUPPLY,PSUs at ModxComputers,N/A,₹3990
+CABINETS,Ant Value CV100 (Black) Cabinet,N/A,₹2690
+CABINETS,DeepCool CC310  1 Fan  M-ATX Cabinet (Black),N/A,₹2790
+CABINETS,TAG Gamerz EVA  3 ARGB Fans  M-ATX Cabinet (White),N/A,₹2790
+CABINETS,Ant Value CV100 (White) Cabinet,N/A,₹2890
+CABINETS,Ant Value CV200 Cabinet (White),N/A,₹2990
+CABINETS,Ant Value CV200 Cabinet (Black),N/A,₹2990
+CABINETS,MSI PAG PANO M110A (Black) Cabinet,N/A,₹3490
+CABINETS,MSI PAG SHIELD M500A  4 Auto RGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹3590
+CABINETS,MSI PRO FORGE M051A  4 Auto-RGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹3690
+CABINETS,Ant Esports 211 Air ARGB (White) Cabinet,N/A,₹3690
+CABINETS,TAG Gamerz Starlight  3 ARGB Fans  M-ATX Cabinet (White),N/A,₹3790
+CABINETS,MSI PRO FORGE M051R  4 ARGB Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹3990
+CABINETS,TAG Gamerz Stellar Elite  4 ARGB Fans  ATX Cabinet (Black),N/A,₹3990
+CABINETS,MSI MAG Forge 130A Airflow (Black),N/A,₹3990
+CABINETS,Ant Esports EVO 360 ARGB Cabinet (Black),N/A,₹4190
+CABINETS,Cooler Master Elite 350  4 ARGB Fans  M-ATX Mid-Tower Cabinet (White),N/A,₹4190
+CABINETS,Cooler Master Elite 350  4 ARGB Fans  M-ATX Mid-Tower Cabinet (Black),N/A,₹4190
+CABINETS,MSI MAG Forge 120A Airflow Cabinet (Black),N/A,₹4290
+CABINETS,Cooler Master Elite 490 ARGB (Black),N/A,₹4390
+CABINETS,Ant Esports 511 Air 5F ARGB (Black),N/A,₹4390
+CABINETS,Ant Esports Zen Air 360 ARGB ATX Cabinet (Black),N/A,₹4490
+CABINETS,TAG Gamerz Nebula  4 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹4490
+CABINETS,TAG Gamerz Nebula  4 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹4490
+CABINETS,Ant Esports AQUA 360 4F  4 ARGB Fans  E-ATX Mid-Tower Cabinet (Black),N/A,₹4750
+CABINETS,Cooler Master Elite 481 Wood ARGB (Black),N/A,₹4790
+CABINETS,Ant Esports 411 Air ARGB (Black) Cabinet,N/A,₹4790
+CABINETS,Ant Esports ICE-410TG ARGB Cabinet (Black),N/A,₹4890
+CABINETS,Ant Esports Titan Core 360  4 ARGB Fans  E-ATX Mid Tower Cabinet (Black),N/A,₹4890
+CABINETS,DeepCool CG380 3F  3 ARGB Fans  M-ATX Cabinet (Black),N/A,₹4990
+CABINETS,Ant Esports Crystal X7  7 ARGB Fans  ATX Cabinet (Black),N/A,₹4990
+CABINETS,Ant Esports Crystal X3 LCD ARGB (White) Cabinet,N/A,₹4990
+CABINETS,Ant Esports Crystal X3 LCD ARGB (Black) Cabinet,N/A,₹4990
+CABINETS,Cooler Master Elite 481 Wood ARGB (White),N/A,₹4990
+CABINETS,Cooler Master Elite 690 Wood ARGB (Black),N/A,₹5190
+CABINETS,Ant Esports Crystal X6 Pro ARGB (Black) Cabinet,N/A,₹5290
+CABINETS,Cooler Master Elite 690 Wood ARGB (White),N/A,₹5390
+CABINETS,Ant Esports 611 Air ARGB (Black) Cabinet,N/A,₹5490
+CABINETS,Ant Esports Dynamic GT ARGB (Black),N/A,₹5490
+CABINETS,Ant Esports Titan FE ARGB  4 ARGB Fans  ATX Mid Tower Cabinet (Black),N/A,₹5490
+CABINETS,TAG Gamerz Aurora-Mesh  6 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹5890
+CABINETS,Ant Esports Crystal ARGB Cabinet (White),N/A,₹5990
+CABINETS,MSI MAG Vampiric 300R  ATX Mid-Tower Cabinet (Midnight Green),N/A,₹5990
+CABINETS,MSI MAG Forge 320R Airflow (Black),N/A,₹5990
+CABINETS,Antec CX700 ARGB Cabinet (Black),N/A,₹5990
+CABINETS,Zotac Gaming Alloy  3 Fans  M-ATX Mini-Tower Cabinet (Black),N/A,₹6290
+CABINETS,Zotac Gaming Alloy  3 Fans  M-ATX Mini-Tower Cabinet (White),N/A,₹6290
+CABINETS,Ant Esports Crystal X6 ARGB Cabinet (Black),N/A,₹6590
+CABINETS,Ant Esports Crystal X6 ARGB (White) Cabinet,N/A,₹6590
+CABINETS,Ant Esports Crystal Mirror ARGB (Black) Cabinet,N/A,₹6890
+CABINETS,Deepcool CG530 4F WH ARGB (White),N/A,₹6990
+CABINETS,TAG Gamerz Orion  7 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹6990
+CABINETS,DeepCool CG530 4F ARGB (Black) Cabinet,N/A,₹6990
+CABINETS,TAG Gamerz Orion  7 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹6990
+CABINETS,Cooler Master Elite 681 ARGB (Black),N/A,₹6990
+CABINETS,Ant Esports Crystal Mirror ARGB (White) Cabinet,N/A,₹6990
+CABINETS,MSI MAG PANO 130R PZ  4 ARGB Fans  ATX Mid-Tower Cabinet (White),N/A,₹7490
+CABINETS,MSI MAG PANO 130R PZ  4 ARGB Fans  ATX Mid-Tower Cabinet (Black),N/A,₹7490
+CABINETS,Custom PC Cabinet from ModxComputers,N/A,₹14490
 CASE FANS,Ant Esports CarbonFlow 120mm Case Fan (Single Pack) (Black),N/A,₹390
 CASE FANS,Galax Vortex Wind 01 120mm ARGB Case Fan (Single Pack) (Black),N/A,₹890
 CASE FANS,Corsair RS120 ARGB 120mm Case Fan (Single Pack) (Black),N/A,₹1290
