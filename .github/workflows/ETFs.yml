@@ -13,10 +13,10 @@ env:
   WORKSHEET_NAME: 'DYNAMIC_ETFS'
   
   # Yahan likhiye ki kya dhundhna hai (Comma se separate karein     'ETF, BEES'  )
-  FILTER_KEYWORDS: 'BEES' 
+  FILTER_KEYWORDS: 'ETF,BEES' 
   
   # Yahan likhiye ki KIS COLUMN mein dhundhna hai (Zerodha CSV wale columns     'name, tradingsymbol'   )
-  SEARCH_COLUMNS: 'tradingsymbol' 
+  SEARCH_COLUMNS: 'name,tradingsymbol' 
   
   TICKER_SUFFIX: ''
 
