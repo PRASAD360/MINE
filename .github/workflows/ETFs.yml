@@ -1,8 +1,10 @@
-name: DYNAMIC_LIST_UPDATER
+name: DYNAMIC_ETFS
 
 on:
   schedule:
     - cron: '30 19 * * *'  # 1:00 AM IST
+    - cron: '30 0 * * *'   # 6:00 AM IST
+    - cron: '30 2 * * *'   # 8:00 AM IST
   workflow_dispatch: # Manual button
 
 # 🟢 YAHAN APNI DETAILS, FILTERS AUR COLUMNS DAALEIN 🟢
@@ -10,13 +12,13 @@ env:
   SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
   WORKSHEET_NAME: 'DYNAMIC_ETFS'
   
-  # Yahan likhiye ki kya dhundhna hai (Comma se separate karein)
-  FILTER_KEYWORDS: 'ETF, BEES' 
+  # Yahan likhiye ki kya dhundhna hai (Comma se separate karein     'ETF, BEES'  )
+  FILTER_KEYWORDS: 'BEES' 
   
-  # Yahan likhiye ki KIS COLUMN mein dhundhna hai (Zerodha CSV wale columns)
-  SEARCH_COLUMNS: 'name, tradingsymbol' 
+  # Yahan likhiye ki KIS COLUMN mein dhundhna hai (Zerodha CSV wale columns     'name, tradingsymbol'   )
+  SEARCH_COLUMNS: 'tradingsymbol' 
   
-  TICKER_SUFFIX: '.NS'
+  TICKER_SUFFIX: ''
 
 jobs:
   sync_data:
