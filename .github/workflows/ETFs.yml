@@ -1,0 +1,112 @@
+name: DYNAMIC_LIST_UPDATER
+
+on:
+  schedule:
+    - cron: '30 19 * * *'  # 1:00 AM IST
+  workflow_dispatch: # Manual button
+
+# 🟢 YAHAN APNI DETAILS, FILTERS AUR COLUMNS DAALEIN 🟢
+env:
+  SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+  WORKSHEET_NAME: 'DYNAMIC_ETFS'
+  
+  # Yahan likhiye ki kya dhundhna hai (Comma se separate karein)
+  FILTER_KEYWORDS: 'ETF, BEES' 
+  
+  # Yahan likhiye ki KIS COLUMN mein dhundhna hai (Zerodha CSV wale columns)
+  SEARCH_COLUMNS: 'name, tradingsymbol' 
+  
+  TICKER_SUFFIX: '.NS'
+
+jobs:
+  sync_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install gspread google-auth pandas requests --disable-pip-version-check
+
+      - name: Fetch and Sync Data to Google Sheets
+        env:
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+          FILTER_KEYWORDS: ${{ env.FILTER_KEYWORDS }}
+          SEARCH_COLUMNS: ${{ env.SEARCH_COLUMNS }}
+          TICKER_SUFFIX: ${{ env.TICKER_SUFFIX }}
+        run: |
+          python3 -c "
+          import os, json
+          import gspread
+          import pandas as pd
+          import requests
+          import io
+          from google.oauth2.service_account import Credentials
+          
+          # 1. ENV VARIABLES KO READ KARNA
+          keywords_str = os.environ.get('FILTER_KEYWORDS', 'ETF,BEES')
+          columns_str = os.environ.get('SEARCH_COLUMNS', 'name,tradingsymbol')
+          suffix = os.environ.get('TICKER_SUFFIX', '.NS')
+          
+          keywords_list = [k.strip() for k in keywords_str.split(',') if k.strip()]
+          search_cols = [c.strip() for c in columns_str.split(',') if c.strip()]
+          regex_pattern = '|'.join(keywords_list)
+          
+          print(f'Filter Keywords: {keywords_list}')
+          print(f'Search Columns: {search_cols}')
+          
+          # 2. ZERODHA OPEN API SE DATA LANA
+          print('Zerodha Open API se data la rahe hain...')
+          url = 'https://api.kite.trade/instruments/NSE'
+          response = requests.get(url)
+          df = pd.read_csv(io.StringIO(response.text))
+          
+          # 3. DYNAMIC COLUMN SEARCH ENGINE
+          # Ek khali filter banayenge aur phir usme specified columns ko check karke add karenge
+          mask = pd.Series(False, index=df.index)
+          
+          for col in search_cols:
+              if col in df.columns:
+                  mask = mask | df[col].astype(str).str.contains(regex_pattern, case=False, na=False, regex=True)
+              else:
+                  print(f'Warning: {col} column file mein nahi mila!')
+                  
+          filtered_df = df[mask].copy()
+          
+          # 4. DYNAMIC SUFFIX ADD KARNA
+          tickers = (filtered_df['tradingsymbol'] + suffix).tolist()
+          print(f'Total {len(tickers)} tickers mil gaye!')
+          
+          # 5. GOOGLE SHEETS MEIN PUSH KARNA
+          creds_json = os.environ.get('GCP_CREDENTIALS')
+          spreadsheet_id = '${{ env.SPREADSHEET_ID }}'
+          worksheet_name = '${{ env.WORKSHEET_NAME }}'
+          
+          if not creds_json:
+              print('Error: GCP_CREDENTIALS missing hai.')
+              exit(1)
+              
+          scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+          creds_dict = json.loads(creds_json)
+          credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+          gc = gspread.authorize(credentials)
+          
+          sh = gc.open_by_key(spreadsheet_id)
+          
+          try:
+              worksheet = sh.worksheet(worksheet_name)
+              worksheet.clear()
+          except gspread.exceptions.WorksheetNotFound:
+              worksheet = sh.add_worksheet(title=worksheet_name, rows=500, cols=5)
+          
+          data_to_upload = [['Tickers']] + [[ticker] for ticker in tickers]
+          
+          worksheet.update(data_to_upload, 'A1')
+          print('Successfully data Google Sheet mein daal diya gaya hai!')
+          "
