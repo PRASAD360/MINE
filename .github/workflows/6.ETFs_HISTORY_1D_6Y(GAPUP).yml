@@ -14,7 +14,7 @@ env:
   SYMBOLS_RANGE: 'A1:A50'
   COLS_WS: 'Fetch_Columns'
   COLS_RANGE: 'A1:A10'
-  TARGET_SPREADSHEET_ID: '1KUKAdyec9ayovSAGmBPn9ECi3dhsHTjXDpcATQSkCSA'
+  TARGET_SPREADSHEET_ID: '17TRn5Mm3TlJsDYIW_Y3NcLiRukNBaVDDaorhmg0TcZA'
 
 jobs:
   fetch_historical_data:
