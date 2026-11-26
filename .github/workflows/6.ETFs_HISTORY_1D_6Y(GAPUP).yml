@@ -1,21 +1,20 @@
-
-name: 6.Dynamic Historical 1h (Bulletproof Optimized)
+name: 6.ETFs Historical 1D 6Y(GAPUP)(Bulletproof Optimized)
 
 on:
   schedule:
-    - cron: '10 11 * * 1-5'   # 3. Theek 4:40 PM IST
+    - cron: '48 10 * * 1-5'  # 2. Theek 4:18 PM IST
   workflow_dispatch:
 
 env:
   SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
   CONFIG_WS: 'Config'
-  CONFIG_PERIOD_CELL: 'B7'
-  CONFIG_INTERVAL_CELL: 'B8'
+  CONFIG_PERIOD_CELL: 'A10'
+  CONFIG_INTERVAL_CELL: 'A11'
   SYMBOLS_WS: 'FILTERED_ETF'
-  SYMBOLS_RANGE: 'A1:A50'
-  COLS_WS: 'Fetch_Columns'
+  SYMBOLS_RANGE: 'B2:B51'
+  COLS_WS: 'Fetch_Columns_ETFs'
   COLS_RANGE: 'A1:A10'
-  TARGET_SPREADSHEET_ID: '17TRn5Mm3TlJsDYIW_Y3NcLiRukNBaVDDaorhmg0TcZA'
+  TARGET_SPREADSHEET_ID: '1KUKAdyec9ayovSAGmBPn9ECi3dhsHTjXDpcATQSkCSA'
 
 jobs:
   fetch_historical_data:
