@@ -1,1 +1,134 @@
+name: NIFTY500
 
+on:
+  schedule:
+    - cron: '30 19 * * *'  # 1:00 AM IST
+    - cron: '30 0 * * *'   # 6:00 AM IST
+    - cron: '30 2 * * *'   # 8:00 AM IST
+  workflow_dispatch:
+
+env:
+  CSV_URL: 'https://www.niftyindices.com/IndexConstituent/ind_nifty500list.csv'
+  SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
+  WORKSHEET_NAME: 'NIFTY200'
+
+jobs:
+  sync_to_sheets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Cache Python Dependencies
+      uses: actions/cache@v3
+      id: pip-cache
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-gsheets
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install Dependencies
+      run: |
+        pip install gspread google-auth requests pandas --disable-pip-version-check
+
+    - name: Fetch CSV (Bypass NSE Block) and Sync Data to Google Sheets
+      env:
+        GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
+      run: |
+        python3 -c "
+        import os, json, io, time
+        import requests
+        import pandas as pd
+        import gspread
+        from google.oauth2.service_account import Credentials
+        from datetime import datetime
+        import pytz
+
+        # Config
+        url = '${{ env.CSV_URL }}'
+        creds_json = os.environ.get('GCP_CREDENTIALS')
+        spreadsheet_id = '${{ env.SPREADSHEET_ID }}'
+        worksheet_name = '${{ env.WORKSHEET_NAME }}'
+
+        if not creds_json or not spreadsheet_id:
+            print('Error: GCP_CREDENTIALS secret ya SPREADSHEET_ID missing hai.')
+            exit(1)
+
+        # 1. Bypass NSE Bot Detection
+        print('Connecting to NSE...')
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br'
+        }
+        
+        session = requests.Session()
+        
+        # Dummy hit to set cookies
+        try:
+            session.get('https://www.niftyindices.com', headers=headers, timeout=10)
+            time.sleep(2) # Chhota pause
+            response = session.get(url, headers=headers, timeout=15)
+            
+            if response.status_code != 200:
+                print(f'Error: NSE server ne data dene se mana kar diya. Status Code: {response.status_code}')
+                exit(1)
+                
+            csv_data = io.StringIO(response.text)
+            df = pd.read_csv(csv_data)
+            
+        except Exception as e:
+            print(f'NSE Connection Error: {e}')
+            exit(1)
+
+        if df.empty:
+            print('Error: Downloaded CSV khali hai.')
+            exit(1)
+
+        # 2. Add Timestamp Column
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist).strftime('%Y-%m-%d %H:%M:%S IST')
+        df['Fetch_Time'] = current_time
+        
+        # Convert DataFrame to list of lists for Google Sheets
+        # Replace NaN with empty strings taaki sheet me kachra na jaye
+        df.fillna('', inplace=True)
+        data_to_upload = [df.columns.values.tolist()] + df.values.tolist()
+        print(f'Successfully prepared {len(data_to_upload)-1} records from NSE.')
+
+        # 3. Authenticate with Google
+        try:
+            scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+            creds_dict = json.loads(creds_json)
+            credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+            gc = gspread.authorize(credentials)
+        except Exception as e:
+            print(f'Authentication Error: GCP_CREDENTIALS JSON check karein. {e}')
+            exit(1)
+
+        # 4. Update Google Sheet
+        try:
+            print(f'Connecting to Spreadsheet ID: {spreadsheet_id}')
+            sh = gc.open_by_key(spreadsheet_id)
+            
+            try:
+                worksheet = sh.worksheet(worksheet_name)
+                print(f'Worksheet \"{worksheet_name}\" pehle se hai. Clearing old data...')
+                worksheet.clear()
+            except gspread.exceptions.WorksheetNotFound:
+                print(f'Worksheet \"{worksheet_name}\" nahi mili. Creating new...')
+                worksheet = sh.add_worksheet(title=worksheet_name, rows=str(len(data_to_upload) + 50), cols=\"20\")
+
+            worksheet.update(data_to_upload, 'A1')
+            print('Success! NIFTY200 list Google Sheet me sync ho gayi hai.')
+            
+        except Exception as e:
+            print(f'Error updating Google Sheet: {e}')
+            exit(1)
+        "
