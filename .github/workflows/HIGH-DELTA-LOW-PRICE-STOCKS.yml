@@ -1,4 +1,4 @@
-name: Nifty High Beta Screener (Date Aligned)
+name: 1. Nifty High Beta Filter (Original Engine)
 
 on:
   schedule:
@@ -6,14 +6,18 @@ on:
   workflow_dispatch:
 
 env:
+  # Tumhare exact original variables
   SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-  SYMBOLS_WS: 'NIFTY500'          
-  SYMBOLS_RANGE: 'A2:A502'      
+  CONFIG_WS: 'Config'
+  CONFIG_PERIOD_CELL: 'A1'
+  CONFIG_INTERVAL_CELL: 'A2'
+  SYMBOLS_WS: 'NIFTY500'
+  SYMBOLS_RANGE: 'A2:A5502'  # Dhyan de: Agar sirf 50 stocks check karoge, toh shayad ek bhi match na ho. Isko A2:A501 karna agar Nifty 500 check karna hai.
   TARGET_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-  TARGET_TAB_NAME: 'HIGH_BETA-LOW_PRICE' 
+  TARGET_TAB_NAME: 'HIGH_BETA-LOW_PRICE'  # Yahan list aayegi
 
 jobs:
-  filter_high_beta_stocks:
+  filter_high_beta:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repo
@@ -27,11 +31,11 @@ jobs:
     - name: Install Dependencies
       run: pip install gspread google-auth yfinance pandas numpy --disable-pip-version-check
 
-    - name: Run Screener Engine (Date Aligned)
+    - name: Run Filter Engine
       env:
         GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
       run: |
-        cat << 'EOF' > screener.py
+        python3 -c "
         import os, json, gspread
         from google.oauth2.service_account import Credentials
         import yfinance as yf
@@ -39,95 +43,105 @@ jobs:
         import numpy as np
         import concurrent.futures
 
-        # 1. Google Sheets Authentication
+        # 1. Setup & Credentials (Original Code)
         creds = Credentials.from_service_account_info(
             json.loads(os.environ['GCP_CREDENTIALS']), 
             scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
         )
         gc = gspread.authorize(creds)
         env = os.environ
-
-        print("Fetching Symbols...")
+        
         source_sh = gc.open_by_key(env['SOURCE_SPREADSHEET_ID'])
-        raw_symbols = [r[0].strip() for r in source_sh.values_get(f"{env['SYMBOLS_WS']}!{env['SYMBOLS_RANGE']}").get('values', []) if r and str(r[0]).strip()]
 
-        # 3. Nifty 50 Data & PERFECT DATE ALIGNMENT
-        print("Fetching Nifty 50 Benchmark...")
-        nifty = yf.Ticker("^NSEI").history(period="1y", interval="1d")
+        # --- OPTIMIZATION 1: Batch Get ---
+        ranges = [
+            f\"{env['CONFIG_WS']}!{env['CONFIG_PERIOD_CELL']}:{env['CONFIG_INTERVAL_CELL']}\",
+            f\"{env['SYMBOLS_WS']}!{env['SYMBOLS_RANGE']}\"
+        ]
+        batch_data = source_sh.values_batch_get(ranges).get('valueRanges', [])
         
-        # BULLETPROOF DATE LOCK (Removes Time/Timezone, keeps only pure date)
-        nifty.index = pd.to_datetime(nifty.index).tz_localize(None).normalize()
+        def safe_get(index):
+            return batch_data[index].get('values', []) if len(batch_data) > index else []
+
+        cfg_data = safe_get(0)
+        period = cfg_data[0][0] if len(cfg_data) > 0 and len(cfg_data[0]) > 0 else '1y'
         
+        raw_symbols = [r[0].strip() for r in safe_get(1) if r and str(r[0]).strip()]
+        print(f'Found {len(raw_symbols)} symbols to check.')
+
+        # --- NIFTY 50 DATA FETCH ---
+        nifty = yf.Ticker('^NSEI').history(period='1y', interval='1d')
+        nifty.index = pd.to_datetime(nifty.index.strftime('%Y-%m-%d'))
         nifty_returns = nifty['Close'].pct_change().dropna()
-        nifty_returns.name = 'Nifty'
         nifty_var = nifty_returns.var()
 
-        if pd.isna(nifty_var) or nifty_var == 0:
-            print("CRITICAL: Nifty Variance invalid.")
-            exit(1)
-
+        # --- YFINANCE LOGIC (Multithreaded Filter) ---
         results = []
-        def process_stock(sym):
+        def fetch(sym):
             try:
-                ticker = sym if any(sym.endswith(ext) for ext in ['.NS', '.BO']) else sym + '.NS'
-                df = yf.Ticker(ticker).history(period="1y", interval="1d")
+                ticker = sym if any(sym.endswith(ext) for ext in ['.NS', '.BO']) or sym.startswith('^') else sym + '.NS'
+                df = yf.Ticker(ticker).history(period='1y', interval='1d')
                 
                 if df.empty or len(df) < 50:
                     return None
                     
                 current_price = float(df['Close'].iloc[-1])
                 
+                # Check Price
                 if not (100 <= current_price <= 500):
+                    print(f'Skipped {sym}: Price {round(current_price, 2)} is not between 100-500')
                     return None
-                
-                # STRICT DATE ALIGNMENT FOR STOCK
-                df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+                    
+                df.index = pd.to_datetime(df.index.strftime('%Y-%m-%d'))
                 stock_returns = df['Close'].pct_change().dropna()
-                stock_returns.name = 'Stock'
                 
-                # DATE-MATCHING CONCATENATION
-                # join='inner' ensures ONLY dates present in BOTH Nifty & Stock are kept
                 aligned = pd.concat([stock_returns, nifty_returns], axis=1, join='inner').dropna()
-                
                 if len(aligned) < 50:
                     return None
                     
-                # Beta Math
-                cov = aligned['Stock'].cov(aligned['Nifty'])
+                cov = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
                 beta = cov / nifty_var
                 
+                # Check Beta
                 if not pd.isna(beta) and beta > 1.2:
+                    print(f'MATCHED! {sym}: Price={round(current_price, 2)}, Beta={round(beta, 2)}')
                     return [sym, round(current_price, 2), round(float(beta), 2)]
-            except Exception:
-                pass
-            return None
+                else:
+                    print(f'Skipped {sym}: Beta {round(beta, 2)} is too low')
+                    return None
+            except Exception as e:
+                print(f'ERROR in {sym}: {e}')
+                return None
 
-        print("Aligning Dates & Calculating Beta...")
-        with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-            futures = {executor.submit(process_stock, s): s for s in raw_symbols}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            futures = {executor.submit(fetch, s): s for s in raw_symbols}
             for f in concurrent.futures.as_completed(futures):
                 res = f.result()
-                if res:
+                if res: 
                     results.append(res)
 
-        results.sort(key=lambda x: x[2], reverse=True)
-        print(f"Found {len(results)} stocks!")
+        # --- OPTIMIZATION 2: Safe Writes to Target Sheet ---
+        if not results:
+            print('\nWARNING: 0 stocks matched the conditions (Price 100-500 AND Beta > 1.2)')
+            final_data = [['Symbol', 'Current_Price', 'Beta'], ['No match found', '', '']]
+        else:
+            results.sort(key=lambda x: x[2], reverse=True)
+            final_data = [['Symbol', 'Current_Price', 'Beta']] + results
 
-        # 5. Push to Google Sheet
         target_sh = gc.open_by_key(env['TARGET_SPREADSHEET_ID'])
         target_tab = env['TARGET_TAB_NAME']
+        existing_ws = {ws.title: ws for ws in target_sh.worksheets()}
         
-        try:
-            ws = target_sh.worksheet(target_tab)
-        except gspread.exceptions.WorksheetNotFound:
-            ws = target_sh.add_worksheet(title=target_tab, rows=max(100, len(results)+10), cols=5)
+        needed_rows = max(100, len(final_data) + 10)
+        
+        if target_tab not in existing_ws:
+            ws = target_sh.add_worksheet(title=target_tab, rows=needed_rows, cols=5)
+        else:
+            ws = existing_ws[target_tab]
+            if ws.row_count < needed_rows:
+                ws.resize(rows=needed_rows)
 
-        final_data = [['Symbol', 'Current_Price', 'Beta_1Y']] + results
-        if len(final_data) > ws.row_count:
-            ws.resize(rows=len(final_data)+20)
-            
         ws.clear()
         ws.update(values=final_data, range_name='A1')
-        print(f"Success! Filtered list pushed to Sheet.")
-        EOF
-        python3 screener.py
+        print(f'Google Sheet {target_tab} Updated successfully!')
+        "
