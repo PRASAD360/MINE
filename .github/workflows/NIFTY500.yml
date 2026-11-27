@@ -10,7 +10,7 @@ on:
 env:
   CSV_URL: 'https://www.niftyindices.com/IndexConstituent/ind_nifty500list.csv'
   SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-  WORKSHEET_NAME: 'NIFTY200'
+  WORKSHEET_NAME: 'NIFTY500'
 
 jobs:
   sync_to_sheets:
