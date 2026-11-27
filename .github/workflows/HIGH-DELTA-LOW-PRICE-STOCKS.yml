@@ -1,4 +1,4 @@
-name: Nifty High Beta Filter (Original Engine)
+name: Nifty High Beta Filter (Relaxed Filter)
 
 on:
   schedule:
@@ -6,15 +6,14 @@ on:
   workflow_dispatch:
 
 env:
-  # Tumhare exact original variables
   SOURCE_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
   CONFIG_WS: 'Config'
   CONFIG_PERIOD_CELL: 'A1'
   CONFIG_INTERVAL_CELL: 'A2'
   SYMBOLS_WS: 'NIFTY500'
-  SYMBOLS_RANGE: 'A2:A502'  # Dhyan de: Agar sirf 50 stocks check karoge, toh shayad ek bhi match na ho. Isko A2:A501 karna agar Nifty 500 check karna hai.
+  SYMBOLS_RANGE: 'A2:A502'  
   TARGET_SPREADSHEET_ID: '1VI2JG_lv1aJ_C0yj7_UKAJhslyXAGZ-BL0vqLSBYrj4'
-  TARGET_TAB_NAME: 'HIGH_BETA-LOW_PRICE'  # Yahan list aayegi
+  TARGET_TAB_NAME: 'HIGH_BETA-LOW_PRICE' 
 
 jobs:
   filter_high_beta:
@@ -43,7 +42,6 @@ jobs:
         import numpy as np
         import concurrent.futures
 
-        # 1. Setup & Credentials (Original Code)
         creds = Credentials.from_service_account_info(
             json.loads(os.environ['GCP_CREDENTIALS']), 
             scopes=['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
@@ -53,7 +51,6 @@ jobs:
         
         source_sh = gc.open_by_key(env['SOURCE_SPREADSHEET_ID'])
 
-        # --- OPTIMIZATION 1: Batch Get ---
         ranges = [
             f\"{env['CONFIG_WS']}!{env['CONFIG_PERIOD_CELL']}:{env['CONFIG_INTERVAL_CELL']}\",
             f\"{env['SYMBOLS_WS']}!{env['SYMBOLS_RANGE']}\"
@@ -69,13 +66,11 @@ jobs:
         raw_symbols = [r[0].strip() for r in safe_get(1) if r and str(r[0]).strip()]
         print(f'Found {len(raw_symbols)} symbols to check.')
 
-        # --- NIFTY 50 DATA FETCH ---
         nifty = yf.Ticker('^NSEI').history(period='1y', interval='1d')
         nifty.index = pd.to_datetime(nifty.index.strftime('%Y-%m-%d'))
         nifty_returns = nifty['Close'].pct_change().dropna()
         nifty_var = nifty_returns.var()
 
-        # --- YFINANCE LOGIC (Multithreaded Filter) ---
         results = []
         def fetch(sym):
             try:
@@ -87,9 +82,9 @@ jobs:
                     
                 current_price = float(df['Close'].iloc[-1])
                 
-                # Check Price
-                if not (100 <= current_price <= 500):
-                    print(f'Skipped {sym}: Price {round(current_price, 2)} is not between 100-500')
+                # Check Price (RELAXED: 50 to 1000)
+                if not (50 <= current_price <= 1000):
+                    print(f'Skipped {sym}: Price {round(current_price, 2)}')
                     return None
                     
                 df.index = pd.to_datetime(df.index.strftime('%Y-%m-%d'))
@@ -102,12 +97,12 @@ jobs:
                 cov = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
                 beta = cov / nifty_var
                 
-                # Check Beta
-                if not pd.isna(beta) and beta > 1.2:
+                # Check Beta (RELAXED: > 1.05)
+                if not pd.isna(beta) and beta > 1.05:
                     print(f'MATCHED! {sym}: Price={round(current_price, 2)}, Beta={round(beta, 2)}')
                     return [sym, round(current_price, 2), round(float(beta), 2)]
                 else:
-                    print(f'Skipped {sym}: Beta {round(beta, 2)} is too low')
+                    print(f'Skipped {sym}: Beta {round(beta, 2)}')
                     return None
             except Exception as e:
                 print(f'ERROR in {sym}: {e}')
@@ -120,9 +115,8 @@ jobs:
                 if res: 
                     results.append(res)
 
-        # --- OPTIMIZATION 2: Safe Writes to Target Sheet ---
         if not results:
-            print('\nWARNING: 0 stocks matched the conditions (Price 100-500 AND Beta > 1.2)')
+            print('\nWARNING: 0 stocks matched.')
             final_data = [['Symbol', 'Current_Price', 'Beta'], ['No match found', '', '']]
         else:
             results.sort(key=lambda x: x[2], reverse=True)
